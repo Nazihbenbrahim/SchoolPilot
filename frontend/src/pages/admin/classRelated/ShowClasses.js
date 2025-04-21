@@ -1,205 +1,255 @@
 import { useEffect, useState } from 'react';
-import { IconButton, Box, Menu, MenuItem, ListItemIcon, Tooltip } from '@mui/material';
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { deleteUser } from '../../../redux/userRelated/userHandle';
 import { getAllSclasses } from '../../../redux/sclassRelated/sclassHandle';
-import { BlueButton, GreenButton } from '../../../components/buttonStyles';
-import TableTemplate from '../../../components/TableTemplate';
-
-import SpeedDialIcon from '@mui/material/SpeedDialIcon';
-import PostAddIcon from '@mui/icons-material/PostAdd';
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
-import AddCardIcon from '@mui/icons-material/AddCard';
-import styled from 'styled-components';
-import SpeedDialTemplate from '../../../components/SpeedDialTemplate';
 import Popup from '../../../components/Popup';
+import { HiPlus, HiTrash } from 'react-icons/hi';
 
 const ShowClasses = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const { sclassesList, loading, error, getresponse } = useSelector((state) => state.sclass);
-  const { currentUser } = useSelector(state => state.user)
+  const { currentUser } = useSelector((state) => state.user);
 
-  const adminID = currentUser._id
+  const adminID = currentUser._id;
 
   useEffect(() => {
-    dispatch(getAllSclasses(adminID, "Sclass"));
+    dispatch(getAllSclasses(adminID, 'Sclass'));
   }, [adminID, dispatch]);
 
   if (error) {
-    console.log(error)
+    console.log(error);
   }
 
   const [showPopup, setShowPopup] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(null);
 
   const deleteHandler = (deleteID, address) => {
-    console.log(deleteID);
-    console.log(address);
-    setMessage("Sorry the delete function has been disabled for now.")
-    setShowPopup(true)
-    // dispatch(deleteUser(deleteID, address))
-    //   .then(() => {
-    //     dispatch(getAllSclasses(adminID, "Sclass"));
-    //   })
-  }
+    setMessage('Sorry, the delete function has been disabled for now.');
+    setShowPopup(true);
+  };
+
+  const handleDeleteAllClasses = () => {
+    setShowDeletePopup(false);
+    deleteHandler(adminID, 'Sclasses');
+  };
 
   const sclassColumns = [
     { id: 'name', label: 'Class Name', minWidth: 170 },
-  ]
-
-  const sclassRows = sclassesList && sclassesList.length > 0 && sclassesList.map((sclass) => {
-    return {
-      name: sclass.sclassName,
-      id: sclass._id,
-    };
-  })
-
-  const SclassButtonHaver = ({ row }) => {
-    const actions = [
-      { icon: <PostAddIcon />, name: 'Add Subjects', action: () => navigate("/Admin/addsubject/" + row.id) },
-      { icon: <PersonAddAlt1Icon />, name: 'Add Student', action: () => navigate("/Admin/class/addstudents/" + row.id) },
-    ];
-    return (
-      <ButtonContainer>
-        <IconButton onClick={() => deleteHandler(row.id, "Sclass")} color="secondary">
-          <DeleteIcon color="error" />
-        </IconButton>
-        <BlueButton variant="contained"
-          onClick={() => navigate("/Admin/classes/class/" + row.id)}>
-          View
-        </BlueButton>
-        <ActionMenu actions={actions} />
-      </ButtonContainer>
-    );
-  };
-
-  const ActionMenu = ({ actions }) => {
-    const [anchorEl, setAnchorEl] = useState(null);
-
-    const open = Boolean(anchorEl);
-
-    const handleClick = (event) => {
-      setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-      setAnchorEl(null);
-    };
-    return (
-      <>
-        <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-          <Tooltip title="Add Students & Subjects">
-            <IconButton
-              onClick={handleClick}
-              size="small"
-              sx={{ ml: 2 }}
-              aria-controls={open ? 'account-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-            >
-              <h5>Add</h5>
-              <SpeedDialIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        <Menu
-          anchorEl={anchorEl}
-          id="account-menu"
-          open={open}
-          onClose={handleClose}
-          onClick={handleClose}
-          PaperProps={{
-            elevation: 0,
-            sx: styles.styledPaper,
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          {actions.map((action) => (
-            <MenuItem onClick={action.action}>
-              <ListItemIcon fontSize="small">
-                {action.icon}
-              </ListItemIcon>
-              {action.name}
-            </MenuItem>
-          ))}
-        </Menu>
-      </>
-    );
-  }
-
-  const actions = [
-    {
-      icon: <AddCardIcon color="primary" />, name: 'Add New Class',
-      action: () => navigate("/Admin/addclass")
-    },
-    {
-      icon: <DeleteIcon color="error" />, name: 'Delete All Classes',
-      action: () => deleteHandler(adminID, "Sclasses")
-    },
+    { id: 'actions', label: 'Actions', minWidth: 150 },
   ];
 
-  return (
-    <>
-      {loading ?
-        <div>Loading...</div>
-        :
-        <>
-          {getresponse ?
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <GreenButton variant="contained" onClick={() => navigate("/Admin/addclass")}>
-                Add Class
-              </GreenButton>
-            </Box>
-            :
-            <>
-              {Array.isArray(sclassesList) && sclassesList.length > 0 &&
-                <TableTemplate buttonHaver={SclassButtonHaver} columns={sclassColumns} rows={sclassRows} />
+  const sclassRows =
+    sclassesList &&
+    sclassesList.length > 0 &&
+    sclassesList.map((sclass) => ({
+      name: sclass.sclassName,
+      id: sclass._id,
+      actions: (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => deleteHandler(sclass._id, 'Sclass')}
+            className="p-2 text-red-600 hover:text-red-700 transition-colors duration-300 animate-slideIn"
+          >
+            <HiTrash className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => navigate('/Admin/classes/class/' + sclass._id)}
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-500/50 animate-slideIn"
+          >
+            View
+          </button>
+          <div className="relative">
+            <button
+              onClick={() =>
+                setShowActionsDropdown(show => (showActionsDropdown === sclass._id ? null : sclass._id))
               }
-              <SpeedDialTemplate actions={actions} />
-            </>}
-        </>
-      }
-      <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
+              className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-all duration-300 animate-slideIn"
+            >
+              Add
+            </button>
+            {showActionsDropdown === sclass._id && (
+              <div className="absolute top-full mt-2 right-0 bg-gray-100/90 backdrop-blur-md text-gray-900 text-sm rounded-md shadow-lg transition-opacity duration-300 z-50 min-w-[150px]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/Admin/addsubject/' + sclass._id);
+                    setShowActionsDropdown(null);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-200 rounded-t-md"
+                >
+                  Add Subjects
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/Admin/class/addstudents/' + sclass._id);
+                    setShowActionsDropdown(null);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-200 rounded-b-md"
+                >
+                  Add Student
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ),
+    }));
 
-    </>
+  return (
+    <div className="p-4 md:p-6">
+      {loading ? (
+        <div className="text-center text-gray-900">Loading...</div>
+      ) : (
+        <>
+          {getresponse ? (
+            <div className="flex justify-end mt-4 animate-fadeIn">
+              <button
+                onClick={() => navigate('/Admin/addclass')}
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-green-500/50 animate-slideIn"
+              >
+                Add Class
+              </button>
+            </div>
+          ) : (
+            <>
+              {Array.isArray(sclassesList) && sclassesList.length > 0 && (
+                <div className="bg-gray-100/80 backdrop-blur-lg border border-gray-300/50 rounded-xl p-6 animate-fadeIn">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4 font-poppins">
+                    Classes List
+                  </h3>
+                  <div className="relative">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-200/50">
+                          {sclassColumns.map((column) => (
+                            <th
+                              key={column.id}
+                              className="px-4 py-3 text-gray-900 font-semibold"
+                              style={{ minWidth: column.minWidth }}
+                            >
+                              {column.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sclassRows.map((row, index) => (
+                          <tr
+                            key={row.id}
+                            className={`border-b border-gray-300/50 hover:bg-gray-200/50 transition-all duration-300 ${
+                              index % 2 === 0 ? 'bg-gray-50/50' : 'bg-gray-100/50'
+                            }`}
+                          >
+                            <td className="px-4 py-3 text-gray-900">{row.name}</td>
+                            <td className="px-4 py-3">{row.actions}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex justify-between items-center mt-4">
+                    <p className="text-gray-600">
+                      Rows per page: 5 • 1-{sclassRows.length} of {sclassRows.length}
+                    </p>
+                    <div className="flex space-x-2">
+                      <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                      </button>
+                      <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="fixed bottom-6 right-6 space-x-3">
+                <div className="relative group inline-block">
+                  <button
+                    className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-500/50 animate-slideIn"
+                    onClick={() => navigate('/Admin/addclass')}
+                  >
+                    <HiPlus className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-16 right-0 bg-gray-800/90 backdrop-blur-md text-white text-sm px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Add New Class
+                  </div>
+                </div>
+                <div className="relative group inline-block">
+                  <button
+                    className="p-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-full hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-500/50 animate-slideIn"
+                    onClick={() => setShowDeletePopup(true)}
+                  >
+                    <HiTrash className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-16 right-0 bg-gray-800/90 backdrop-blur-md text-white text-sm px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Delete All Classes
+                  </div>
+                </div>
+              </div>
+              {showDeletePopup && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="bg-gray-100/80 backdrop-blur-lg border border-gray-300/50 rounded-xl p-6 max-w-sm w-full">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 font-poppins">
+                      Confirm Deletion
+                    </h3>
+                    <p className="text-gray-700 mb-6">
+                      Are you sure you want to delete all classes? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => setShowDeletePopup(false)}
+                        className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-all duration-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDeleteAllClasses}
+                        className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg hover:shadow-red-500/50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+      <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
+    </div>
   );
 };
 
 export default ShowClasses;
-
-const styles = {
-  styledPaper: {
-    overflow: 'visible',
-    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-    mt: 1.5,
-    '& .MuiAvatar-root': {
-      width: 32,
-      height: 32,
-      ml: -0.5,
-      mr: 1,
-    },
-    '&:before': {
-      content: '""',
-      display: 'block',
-      position: 'absolute',
-      top: 0,
-      right: 14,
-      width: 10,
-      height: 10,
-      bgcolor: 'background.paper',
-      transform: 'translateY(-50%) rotate(45deg)',
-      zIndex: 0,
-    },
-  }
-}
-
-const ButtonContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-`;

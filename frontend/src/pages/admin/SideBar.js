@@ -1,85 +1,133 @@
-import * as React from 'react';
-import { Divider, ListItemButton, ListItemIcon, ListItemText, ListSubheader } from '@mui/material';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { HiOutlineHome, HiOutlineUsers, HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineBell, HiOutlineExclamationCircle, HiOutlineUserCircle, HiOutlineLogout } from 'react-icons/hi';
 
-import HomeIcon from "@mui/icons-material/Home";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import AnnouncementOutlinedIcon from '@mui/icons-material/AnnouncementOutlined';
-import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
-import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
-import ReportIcon from '@mui/icons-material/Report';
-import AssignmentIcon from '@mui/icons-material/Assignment';
+const SideBar = ({ open }) => {
+  const location = useLocation();
 
-const SideBar = () => {
-    const location = useLocation();
-    return (
-        <>
-            <React.Fragment>
-                <ListItemButton component={Link} to="/">
-                    <ListItemIcon>
-                        <HomeIcon color={location.pathname === ("/" || "/Admin/dashboard") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Home" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/classes">
-                    <ListItemIcon>
-                        <ClassOutlinedIcon color={location.pathname.startsWith('/Admin/classes') ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Classes" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/subjects">
-                    <ListItemIcon>
-                        <AssignmentIcon color={location.pathname.startsWith("/Admin/subjects") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Subjects" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/teachers">
-                    <ListItemIcon>
-                        <SupervisorAccountOutlinedIcon color={location.pathname.startsWith("/Admin/teachers") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Teachers" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/students">
-                    <ListItemIcon>
-                        <PersonOutlineIcon color={location.pathname.startsWith("/Admin/students") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Students" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/notices">
-                    <ListItemIcon>
-                        <AnnouncementOutlinedIcon color={location.pathname.startsWith("/Admin/notices") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Notices" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/complains">
-                    <ListItemIcon>
-                        <ReportIcon color={location.pathname.startsWith("/Admin/complains") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Complains" />
-                </ListItemButton>
-            </React.Fragment>
-            <Divider sx={{ my: 1 }} />
-            <React.Fragment>
-                <ListSubheader component="div" inset>
-                    User
-                </ListSubheader>
-                <ListItemButton component={Link} to="/Admin/profile">
-                    <ListItemIcon>
-                        <AccountCircleOutlinedIcon color={location.pathname.startsWith("/Admin/profile") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Profile" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/logout">
-                    <ListItemIcon>
-                        <ExitToAppIcon color={location.pathname.startsWith("/logout") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Logout" />
-                </ListItemButton>
-            </React.Fragment>
-        </>
-    )
-}
+  const isActive = (path) => {
+    if (path === '/' || path === '/Admin/dashboard') {
+      return location.pathname === '/' || location.pathname === '/Admin/dashboard';
+    }
+    return location.pathname.startsWith(path);
+  };
 
-export default SideBar
+  return (
+    <div className="flex flex-col h-full bg-gray-100/80 backdrop-blur-lg border-r border-gray-300/50 text-gray-900">
+      {/* Main Navigation Links */}
+      <div>
+        <Link
+          to="/"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineHome className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Home</span>
+        </Link>
+        <Link
+          to="/Admin/classes"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/classes')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineBookOpen className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Classes</span>
+        </Link>
+        <Link
+          to="/Admin/subjects"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/subjects')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineBookOpen className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Subjects</span>
+        </Link>
+        <Link
+          to="/Admin/teachers"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/teachers')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineAcademicCap className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Teachers</span>
+        </Link>
+        <Link
+          to="/Admin/students"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/students')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineUsers className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Students</span>
+        </Link>
+        <Link
+          to="/Admin/notices"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/notices')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineBell className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Notices</span>
+        </Link>
+        <Link
+          to="/Admin/complains"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/complains')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineExclamationCircle className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Complains</span>
+        </Link>
+      </div>
+
+      {/* Divider */}
+      <div className="my-2 border-t border-gray-300/50"></div>
+
+      {/* User Section */}
+      <div>
+        <div className="px-4 py-2 text-gray-500 font-poppins text-sm">
+          User
+        </div>
+        <Link
+          to="/Admin/profile"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/Admin/profile')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineUserCircle className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Profile</span>
+        </Link>
+        <Link
+          to="/logout"
+          className={`flex items-center px-4 py-3 transition-all duration-300 ${
+            isActive('/logout')
+              ? 'bg-accent-blue/50 text-accent-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+              : 'hover:bg-blue-gray-200 hover:text-accent-blue hover:scale-105 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+          }`}
+        >
+          <HiOutlineLogout className="h-5 w-5 mr-4" />
+          <span className="font-poppins">Logout</span>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default SideBar;

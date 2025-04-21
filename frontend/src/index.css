@@ -1,5 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
-  font-family: 'Poppins', sans-serif;
   margin: 0;
 }
 
@@ -12,84 +15,104 @@ a {
   display: none;
 }
 
-:root {
-  --color-bg: #1f1f38;
-  --color-bg-variant: #2c2c6c;
-  --color-primary: #4db5ff;
-  --color-primary-variant: rgba(77, 181, 255, 0.4);
-  --color-light: rgba(255, 255, 255, 0.6);
-}
-
 /* FORM */
 .register {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /* color: #ffffff; */
-  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1510936111840-65e151ad71bb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=890&q=80"); */
-  /* background-color: var(--color-bg);
-  background-size: cover;
-  background-blend-mode: darken; */
-  font-family: "Josefin Sans", sans-serif;
+  @apply min-h-screen flex flex-col items-center justify-center bg-blue-gray-100 dark:bg-blue-gray-900;
 }
 
 .registerTitle {
-  font-size: 50px;
+  @apply text-5xl font-poppins font-semibold text-blue-gray-900 dark:text-white mb-6;
 }
 
 .registerForm {
-  margin-top: -50px;
-  display: flex;
-  flex-direction: column;
+  @apply mt-[-50px] flex flex-col;
 }
 
-.registerForm>label {
-  margin: 10px 0;
-  color: rgb(0, 0, 0);
+.registerForm > label {
+  @apply my-2 text-blue-gray-700 dark:text-blue-gray-200 font-poppins;
 }
 
 .registerInput {
-  padding: 10px;
-  background-color: white;
-  border: none;
-  border-radius: 10px;
+  @apply p-3 bg-white dark:bg-blue-gray-700 dark:text-white border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-blue;
 }
 
 .registerInput:focus {
-  outline: none;
+  @apply outline-none ring-2 ring-accent-blue;
 }
 
 .registerButton {
-  margin-top: 20px;
-  cursor: pointer;
-  background-color: #000000;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.registerButton:hover {
-  background-color: #313131;
+  @apply mt-5 cursor-pointer bg-accent-blue text-white py-3 rounded-lg text-center hover:bg-blue-700 transition-colors duration-200;
 }
 
 @media screen and (max-width: 480px) {
-  .register {
-    background-position: right;
-  }
-
   .registerInput {
-    font-size: 15px;
-    padding: 15px;
-    border-radius: 8px;
+    @apply text-base p-4 rounded-md;
   }
 
   .registerButton {
-    font-size: 16px;
-    padding: 20px;
-    border-radius: 12px;
+    @apply text-lg py-5 rounded-xl;
   }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInSidebar {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.7s ease-in-out;
+}
+
+.animate-slideInSidebar {
+  animation: slideInSidebar 0.5s ease-in-out;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
 }
