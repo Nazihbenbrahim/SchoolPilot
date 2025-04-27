@@ -123,7 +123,9 @@ const AdminDashboard = () => {
               <Route path="/Admin/students/student/attendance/:id" element={<StudentAttendance situation="Student" />} />
               <Route path="/Admin/students/student/marks/:id" element={<StudentExamMarks situation="Student" />} />
               <Route path="/Admin/teachers" element={<ShowTeachers />} />
+              <Route path="/Admin/teachers/add" element={<AddTeacher />} />
               <Route path="/Admin/teachers/teacher/:id" element={<TeacherDetails />} />
+              <Route path="/Admin/teachers/edit/:id" element={<AddTeacher />} /> {/* New route */}
               <Route path="/Admin/teachers/chooseclass" element={<ChooseClass situation="Teacher" />} />
               <Route path="/Admin/teachers/choosesubject/:id" element={<ChooseSubject situation="Norm" />} />
               <Route path="/Admin/teachers/choosesubject/:classID/:teacherID" element={<ChooseSubject situation="Teacher" />} />

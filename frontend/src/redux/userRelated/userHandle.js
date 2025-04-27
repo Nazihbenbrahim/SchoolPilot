@@ -66,28 +66,12 @@ export const getUserDetails = (id, address) => async (dispatch) => {
     } catch (error) {
         dispatch(getError(error));
     }
-}
-
-// export const deleteUser = (id, address) => async (dispatch) => {
-//     dispatch(getRequest());
-
-//     try {
-//         const result = await axios.delete(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`);
-//         if (result.data.message) {
-//             dispatch(getFailed(result.data.message));
-//         } else {
-//             dispatch(getDeleteSuccess());
-//         }
-//     } catch (error) {
-//         dispatch(getError(error));
-//     }
-// }
-
+};
 
 export const deleteUser = (id, address) => async (dispatch) => {
     dispatch(getRequest());
     dispatch(getFailed("Sorry the delete function has been disabled for now."));
-}
+};
 
 export const updateUser = (fields, id, address) => async (dispatch) => {
     dispatch(getRequest());
@@ -105,7 +89,7 @@ export const updateUser = (fields, id, address) => async (dispatch) => {
     } catch (error) {
         dispatch(getError(error));
     }
-}
+};
 
 export const addStuff = (fields, address) => async (dispatch) => {
     dispatch(authRequest());
@@ -119,6 +103,23 @@ export const addStuff = (fields, address) => async (dispatch) => {
             dispatch(authFailed(result.data.message));
         } else {
             dispatch(stuffAdded(result.data));
+        }
+    } catch (error) {
+        dispatch(authError(error));
+    }
+};
+
+export const updateTeacherSubjectsAndClasses = (fields) => async (dispatch) => {
+    dispatch(authRequest());
+
+    try {
+        const result = await axios.put(`${process.env.REACT_APP_BASE_URL}/TeacherSubjectsAndClasses`, fields, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (result.data.message) {
+            dispatch(authFailed(result.data.message));
+        } else {
+            dispatch(stuffAdded()); // Use stuffAdded to indicate success
         }
     } catch (error) {
         dispatch(authError(error));

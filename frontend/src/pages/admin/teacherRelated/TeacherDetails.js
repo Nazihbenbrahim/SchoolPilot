@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { getTeacherDetails } from '../../../redux/teacherRelated/teacherHandle';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Container, Typography } from '@mui/material';
+import { Button, Container, Typography, List, ListItem, ListItemText } from '@mui/material';
 
 const TeacherDetails = () => {
     const navigate = useNavigate();
@@ -20,10 +20,8 @@ const TeacherDetails = () => {
         console.log(error);
     }
 
-    const isSubjectNamePresent = teacherDetails?.teachSubject?.subName;
-
-    const handleAddSubject = () => {
-        navigate(`/Admin/teachers/choosesubject/${teacherDetails?.teachSclass?._id}/${teacherDetails?._id}`);
+    const handleAddSubjectAndClass = () => {
+        navigate(`/Admin/teachers/edit/${teacherDetails?._id}`); // Updated route
     };
 
     return (
@@ -39,22 +37,36 @@ const TeacherDetails = () => {
                         Teacher Name: {teacherDetails?.name}
                     </Typography>
                     <Typography variant="h6" gutterBottom>
-                        Class Name: {teacherDetails?.teachSclass?.sclassName}
+                        Classes:
                     </Typography>
-                    {isSubjectNamePresent ? (
-                        <>
-                            <Typography variant="h6" gutterBottom>
-                                Subject Name: {teacherDetails?.teachSubject?.subName}
-                            </Typography>
-                            <Typography variant="h6" gutterBottom>
-                                Subject Sessions: {teacherDetails?.teachSubject?.sessions}
-                            </Typography>
-                        </>
-                    ) : (
-                        <Button variant="contained" onClick={handleAddSubject}>
-                            Add Subject
-                        </Button>
-                    )}
+                    <List>
+                        {teacherDetails?.teachSclasses?.length > 0 ? (
+                            teacherDetails.teachSclasses.map((sclass, index) => (
+                                <ListItem key={index}>
+                                    <ListItemText primary={sclass.sclassName} />
+                                </ListItem>
+                            ))
+                        ) : (
+                            <Typography>No classes assigned</Typography>
+                        )}
+                    </List>
+                    <Typography variant="h6" gutterBottom>
+                        Subjects:
+                    </Typography>
+                    <List>
+                        {teacherDetails?.teachSubjects?.length > 0 ? (
+                            teacherDetails.teachSubjects.map((subject, index) => (
+                                <ListItem key={index}>
+                                    <ListItemText primary={`${subject.subName} (${subject.sessions} sessions)`} />
+                                </ListItem>
+                            ))
+                        ) : (
+                            <Typography>No subjects assigned</Typography>
+                        )}
+                    </List>
+                    <Button variant="contained" onClick={handleAddSubjectAndClass}>
+                        Add Subjects and Classes
+                    </Button>
                 </Container>
             )}
         </>

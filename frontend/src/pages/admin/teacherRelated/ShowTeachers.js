@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 import { getAllTeachers } from '../../../redux/teacherRelated/teacherHandle';
 import {
     Paper, Table, TableBody, TableContainer,
@@ -11,6 +11,7 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { StyledTableCell, StyledTableRow } from '../../../components/styles';
 import { BlueButton, GreenButton } from '../../../components/buttonStyles';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import EditIcon from '@mui/icons-material/Edit';
 import SpeedDialTemplate from '../../../components/SpeedDialTemplate';
 import Popup from '../../../components/Popup';
 
@@ -35,7 +36,7 @@ const ShowTeachers = () => {
     } else if (response) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-                <GreenButton variant="contained" onClick={() => navigate("/Admin/teachers/chooseclass")}>
+                <GreenButton variant="contained" onClick={() => navigate("/Admin/teachers/add")}>
                     Add Teacher
                 </GreenButton>
             </Box>
@@ -45,28 +46,21 @@ const ShowTeachers = () => {
     }
 
     const deleteHandler = (deleteID, address) => {
-        console.log(deleteID);
-        console.log(address);
-        setMessage("Sorry the delete function has been disabled for now.")
-        setShowPopup(true)
-
-        // dispatch(deleteUser(deleteID, address)).then(() => {
-        //     dispatch(getAllTeachers(currentUser._id));
-        // });
+        setMessage("Sorry the delete function has been disabled for now.");
+        setShowPopup(true);
     };
 
     const columns = [
         { id: 'name', label: 'Name', minWidth: 170 },
-        { id: 'teachSubject', label: 'Subject', minWidth: 100 },
-        { id: 'teachSclass', label: 'Class', minWidth: 170 },
+        { id: 'teachSubjects', label: 'Subjects', minWidth: 170 },
+        { id: 'teachSclasses', label: 'Classes', minWidth: 170 },
     ];
 
     const rows = teachersList.map((teacher) => {
         return {
             name: teacher.name,
-            teachSubject: teacher.teachSubject?.subName || null,
-            teachSclass: teacher.teachSclass.sclassName,
-            teachSclassID: teacher.teachSclass._id,
+            teachSubjects: teacher.teachSubjects?.map(subject => subject.subName).join(', ') || 'None',
+            teachSclasses: teacher.teachSclasses?.map(sclass => sclass.sclassName).join(', ') || 'None',
             id: teacher._id,
         };
     });
@@ -74,7 +68,7 @@ const ShowTeachers = () => {
     const actions = [
         {
             icon: <PersonAddAlt1Icon color="primary" />, name: 'Add New Teacher',
-            action: () => navigate("/Admin/teachers/chooseclass")
+            action: () => navigate("/Admin/teachers/add")
         },
         {
             icon: <PersonRemoveIcon color="error" />, name: 'Delete All Teachers',
@@ -110,22 +104,6 @@ const ShowTeachers = () => {
                                     <StyledTableRow hover role="checkbox" tabIndex={-1} key={row.id}>
                                         {columns.map((column) => {
                                             const value = row[column.id];
-                                            if (column.id === 'teachSubject') {
-                                                return (
-                                                    <StyledTableCell key={column.id} align={column.align}>
-                                                        {value ? (
-                                                            value
-                                                        ) : (
-                                                            <Button variant="contained"
-                                                                onClick={() => {
-                                                                    navigate(`/Admin/teachers/choosesubject/${row.teachSclassID}/${row.id}`)
-                                                                }}>
-                                                                Add Subject
-                                                            </Button>
-                                                        )}
-                                                    </StyledTableCell>
-                                                );
-                                            }
                                             return (
                                                 <StyledTableCell key={column.id} align={column.align}>
                                                     {column.format && typeof value === 'number' ? column.format(value) : value}
@@ -140,6 +118,11 @@ const ShowTeachers = () => {
                                                 onClick={() => navigate("/Admin/teachers/teacher/" + row.id)}>
                                                 View
                                             </BlueButton>
+                                            <Button variant="contained" color="primary"
+                                                startIcon={<EditIcon />}
+                                                onClick={() => navigate("/Admin/teachers/edit/" + row.id)}>
+                                                Edit
+                                            </Button>
                                         </StyledTableCell>
                                     </StyledTableRow>
                                 );
@@ -159,11 +142,10 @@ const ShowTeachers = () => {
                     setPage(0);
                 }}
             />
-
             <SpeedDialTemplate actions={actions} />
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-        </Paper >
+        </Paper>
     );
 };
 
-export default ShowTeachers
+export default ShowTeachers;
