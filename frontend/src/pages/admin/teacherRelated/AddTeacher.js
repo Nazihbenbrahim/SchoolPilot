@@ -5,7 +5,6 @@ import { getAllSclasses, getSubjectList } from '../../../redux/sclassRelated/scl
 import { getTeacherDetails } from '../../../redux/teacherRelated/teacherHandle';
 import { registerUser, updateTeacherSubjectsAndClasses } from '../../../redux/userRelated/userHandle';
 import { underControl } from '../../../redux/userRelated/userSlice';
-import { CircularProgress, FormControl, InputLabel, Select, MenuItem, TextField, Button } from '@mui/material';
 import Popup from '../../../components/Popup';
 
 const AddTeacher = () => {
@@ -15,8 +14,8 @@ const AddTeacher = () => {
 
     const { status, response, error } = useSelector(state => state.user);
     const { sclassesList, subjectsList } = useSelector((state) => state.sclass);
-    const { teacherDetails } = useSelector(state => state.teacher); // Correct selector for teacher slice
-    const { currentUser } = useSelector(state => state.user); // Correct selector for user slice
+    const { teacherDetails } = useSelector(state => state.teacher);
+    const { currentUser } = useSelector(state => state.user);
 
     const teacherID = params.id;
 
@@ -87,89 +86,112 @@ const AddTeacher = () => {
     }, [status, navigate, error, response, dispatch]);
 
     if (!currentUser) {
-        return <div>Loading user data...</div>;
+        return <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600"></div>
+        </div>;
     }
 
     return (
-        <div>
-            <div className="register">
-                <form className="registerForm" onSubmit={submitHandler}>
-                    <span className="registerTitle">{teacherID ? "Edit Teacher" : "Add Teacher"}</span>
-                    <br />
+        <div className="flex justify-center items-center min-h-screen p-4 md:p-6">
+            <form
+                onSubmit={submitHandler}
+                className="bg-gray-100/80 backdrop-blur-lg border border-gray-300/50 rounded-xl p-6 md:p-8 max-w-md w-full shadow-[0_0_15px_rgba(59,130,246,0.2)] animate-fadeIn font-poppins"
+            >
+                <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-6 text-center">
+                    {teacherID ? "Edit Teacher" : "Add Teacher"}
+                </h2>
+                <div className="space-y-4">
                     {!teacherID && (
                         <>
-                            <label>Name</label>
-                            <TextField
-                                className="registerInput"
-                                type="text"
-                                placeholder="Enter teacher's name..."
-                                value={name}
-                                onChange={(event) => setName(event.target.value)}
-                                autoComplete="name"
-                                required
-                                fullWidth
-                            />
-                            <label>Email</label>
-                            <TextField
-                                className="registerInput"
-                                type="email"
-                                placeholder="Enter teacher's email..."
-                                value={email}
-                                onChange={(event) => setEmail(event.target.value)}
-                                autoComplete="email"
-                                required
-                                fullWidth
-                            />
-                            <label>Password</label>
-                            <TextField
-                                className="registerInput"
-                                type="password"
-                                placeholder="Enter teacher's password..."
-                                value={password}
-                                onChange={(event) => setPassword(event.target.value)}
-                                autoComplete="new-password"
-                                required
-                                fullWidth
-                            />
+                            <div>
+                                <label className="block text-gray-700 mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter teacher's name..."
+                                    value={name}
+                                    onChange={(event) => setName(event.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins"
+                                    autoComplete="name"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    placeholder="Enter teacher's email..."
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins"
+                                    autoComplete="email"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    placeholder="Enter teacher's password..."
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                            </div>
                         </>
                     )}
-                    <FormControl fullWidth>
-                        <InputLabel>Classes</InputLabel>
-                        <Select
+                    <div>
+                        <label className="block text-gray-700 mb-2">Classes</label>
+                        <select
                             multiple
                             value={teachSclasses}
-                            onChange={(event) => setTeachSclasses(event.target.value)}
+                            onChange={(event) => setTeachSclasses(Array.from(event.target.selectedOptions, option => option.value))}
+                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
                         >
                             {sclassesList.map((sclass) => (
-                                <MenuItem key={sclass._id} value={sclass._id}>
+                                <option key={sclass._id} value={sclass._id}>
                                     {sclass.sclassName}
-                                </MenuItem>
+                                </option>
                             ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Subjects</InputLabel>
-                        <Select
+                        </select>
+                        <p className="text-sm text-gray-500 mt-1 font-poppins">
+                            Hold Ctrl (or Command on Mac) to select multiple classes.
+                        </p>
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 mb-2">Subjects</label>
+                        <select
                             multiple
                             value={teachSubjects}
-                            onChange={(event) => setTeachSubjects(event.target.value)}
+                            onChange={(event) => setTeachSubjects(Array.from(event.target.selectedOptions, option => option.value))}
+                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
                         >
                             {subjectsList.map((subject) => (
-                                <MenuItem key={subject._id} value={subject._id}>
+                                <option key={subject._id} value={subject._id}>
                                     {subject.subName}
-                                </MenuItem>
+                                </option>
                             ))}
-                        </Select>
-                    </FormControl>
-                    <Button className="registerButton" type="submit" disabled={loader}>
+                        </select>
+                        <p className="text-sm text-gray-500 mt-1 font-poppins">
+                            Hold Ctrl (or Command on Mac) to select multiple subjects.
+                        </p>
+                    </div>
+                </div>
+                <div className="flex justify-end mt-6">
+                    <button
+                        type="submit"
+                        disabled={loader}
+                        className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-500/50 font-poppins flex items-center"
+                    >
                         {loader ? (
-                            <CircularProgress size={24} color="inherit" />
+                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white mr-2"></div>
                         ) : (
                             teacherID ? 'Update' : 'Register'
                         )}
-                    </Button>
-                </form>
-            </div>
+                    </button>
+                </div>
+            </form>
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
         </div>
     );

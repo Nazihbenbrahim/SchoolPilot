@@ -3,21 +3,34 @@ const Teacher = require('../models/teacherSchema.js');
 const Subject = require('../models/subjectSchema.js');
 
 const teacherRegister = async (req, res) => {
-    const { name, email, password, role, school, teachSubject, teachSclass } = req.body;
+    const { name, email, password, role, school, teachSubjects, teachSclasses } = req.body;
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(password, salt);
 
-        const teacher = new Teacher({ name, email, password: hashedPass, role, school, teachSubject, teachSclass });
+        const teacher = new Teacher({ 
+            name, 
+            email, 
+            password: hashedPass, 
+            role, 
+            school, 
+            teachSubjects: teachSubjects || [], // Expect array
+            teachSclasses: teachSclasses || []  // Expect array
+        });
 
         const existingTeacherByEmail = await Teacher.findOne({ email });
 
         if (existingTeacherByEmail) {
             res.send({ message: 'Email already exists' });
-        }
-        else {
+        } else {
             let result = await teacher.save();
-            await Subject.findByIdAndUpdate(teachSubject, { teacher: teacher._id });
+            // Update subjects to reference this teacher
+            if (teachSubjects && teachSubjects.length > 0) {
+                await Subject.updateMany(
+                    { _id: { $in: teachSubjects } },
+                    { $set: { teacher: teacher._id } }
+                );
+            }
             result.password = undefined;
             res.send(result);
         }
@@ -32,9 +45,9 @@ const teacherLogIn = async (req, res) => {
         if (teacher) {
             const validated = await bcrypt.compare(req.body.password, teacher.password);
             if (validated) {
-                teacher = await teacher.populate("teachSubject", "subName sessions")
-                teacher = await teacher.populate("school", "schoolName")
-                teacher = await teacher.populate("teachSclass", "sclassName")
+                teacher = await teacher.populate("teachSubjects", "subName sessions");
+                teacher = await teacher.populate("school", "schoolName");
+                teacher = await teacher.populate("teachSclasses", "sclassName");
                 teacher.password = undefined;
                 res.send(teacher);
             } else {
@@ -51,8 +64,8 @@ const teacherLogIn = async (req, res) => {
 const getTeachers = async (req, res) => {
     try {
         let teachers = await Teacher.find({ school: req.params.id })
-            .populate("teachSubject", "subName")
-            .populate("teachSclass", "sclassName");
+            .populate("teachSubjects", "subName")
+            .populate("teachSclasses", "sclassName");
         if (teachers.length > 0) {
             let modifiedTeachers = teachers.map((teacher) => {
                 return { ...teacher._doc, password: undefined };
@@ -69,31 +82,55 @@ const getTeachers = async (req, res) => {
 const getTeacherDetail = async (req, res) => {
     try {
         let teacher = await Teacher.findById(req.params.id)
-            .populate("teachSubject", "subName sessions")
+            .populate("teachSubjects", "subName sessions")
             .populate("school", "schoolName")
-            .populate("teachSclass", "sclassName")
+            .populate("teachSclasses", "sclassName");
         if (teacher) {
             teacher.password = undefined;
             res.send(teacher);
-        }
-        else {
+        } else {
             res.send({ message: "No teacher found" });
         }
     } catch (err) {
         res.status(500).json(err);
     }
-}
+};
 
-const updateTeacherSubject = async (req, res) => {
-    const { teacherId, teachSubject } = req.body;
+const updateTeacherSubjectsAndClasses = async (req, res) => {
+    const { teacherId, teachSubjects, teachSclasses } = req.body;
     try {
+        // Find the teacher to get the current subjects
+        const teacher = await Teacher.findById(teacherId);
+        if (!teacher) {
+            return res.status(404).json({ message: "Teacher not found" });
+        }
+
+        // Remove teacher reference from subjects that are no longer assigned
+        const removedSubjects = teacher.teachSubjects.filter(
+            (subjectId) => !teachSubjects.includes(subjectId.toString())
+        );
+        if (removedSubjects.length > 0) {
+            await Subject.updateMany(
+                { _id: { $in: removedSubjects } },
+                { $unset: { teacher: 1 } }
+            );
+        }
+
+        // Update the teacher with new subjects and classes
         const updatedTeacher = await Teacher.findByIdAndUpdate(
             teacherId,
-            { teachSubject },
+            { teachSubjects, teachSclasses },
             { new: true }
-        );
+        ).populate("teachSubjects", "subName sessions")
+         .populate("teachSclasses", "sclassName");
 
-        await Subject.findByIdAndUpdate(teachSubject, { teacher: updatedTeacher._id });
+        // Add teacher reference to newly assigned subjects
+        if (teachSubjects && teachSubjects.length > 0) {
+            await Subject.updateMany(
+                { _id: { $in: teachSubjects } },
+                { $set: { teacher: updatedTeacher._id } }
+            );
+        }
 
         res.send(updatedTeacher);
     } catch (error) {
@@ -105,8 +142,12 @@ const deleteTeacher = async (req, res) => {
     try {
         const deletedTeacher = await Teacher.findByIdAndDelete(req.params.id);
 
-        await Subject.updateOne(
-            { teacher: deletedTeacher._id, teacher: { $exists: true } },
+        if (!deletedTeacher) {
+            return res.status(404).json({ message: "Teacher not found" });
+        }
+
+        await Subject.updateMany(
+            { teacher: deletedTeacher._id },
             { $unset: { teacher: 1 } }
         );
 
@@ -127,11 +168,9 @@ const deleteTeachers = async (req, res) => {
             return;
         }
 
-        const deletedTeachers = await Teacher.find({ school: req.params.id });
-
         await Subject.updateMany(
-            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) }, teacher: { $exists: true } },
-            { $unset: { teacher: "" }, $unset: { teacher: null } }
+            { teacher: { $in: deletionResult.map(teacher => teacher._id) } },
+            { $unset: { teacher: 1 } }
         );
 
         res.send(deletionResult);
@@ -142,7 +181,7 @@ const deleteTeachers = async (req, res) => {
 
 const deleteTeachersByClass = async (req, res) => {
     try {
-        const deletionResult = await Teacher.deleteMany({ sclassName: req.params.id });
+        const deletionResult = await Teacher.deleteMany({ teachSclasses: req.params.id });
 
         const deletedCount = deletionResult.deletedCount || 0;
 
@@ -151,11 +190,11 @@ const deleteTeachersByClass = async (req, res) => {
             return;
         }
 
-        const deletedTeachers = await Teacher.find({ sclassName: req.params.id });
+        const deletedTeachers = await Teacher.find({ teachSclasses: req.params.id });
 
         await Subject.updateMany(
-            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) }, teacher: { $exists: true } },
-            { $unset: { teacher: "" }, $unset: { teacher: null } }
+            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) } },
+            { $unset: { teacher: 1 } }
         );
 
         res.send(deletionResult);
@@ -175,8 +214,7 @@ const teacherAttendance = async (req, res) => {
         }
 
         const existingAttendance = teacher.attendance.find(
-            (a) =>
-                a.date.toDateString() === new Date(date).toDateString()
+            (a) => a.date.toDateString() === new Date(date).toDateString()
         );
 
         if (existingAttendance) {
@@ -188,7 +226,7 @@ const teacherAttendance = async (req, res) => {
         const result = await teacher.save();
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error)
+        res.status(500).json(error);
     }
 };
 
@@ -197,7 +235,7 @@ module.exports = {
     teacherLogIn,
     getTeachers,
     getTeacherDetail,
-    updateTeacherSubject,
+    updateTeacherSubjectsAndClasses,
     deleteTeacher,
     deleteTeachers,
     deleteTeachersByClass,

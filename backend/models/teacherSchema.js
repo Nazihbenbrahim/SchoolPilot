@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const teacherSchema = new mongoose.Schema({
     name: {
@@ -23,15 +23,15 @@ const teacherSchema = new mongoose.Schema({
         ref: 'admin',
         required: true,
     },
-    teachSubject: {
+    teachSubjects: [{  // Changed to array of subjects
         type: mongoose.Schema.Types.ObjectId,
         ref: 'subject',
-    },
-    teachSclass: {
+    }],
+    teachSclasses: [{  // Changed to array of classes
         type: mongoose.Schema.Types.ObjectId,
         ref: 'sclass',
         required: true,
-    },
+    }],
     attendance: [{
         date: {
             type: Date,
@@ -46,4 +46,4 @@ const teacherSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-module.exports = mongoose.model("teacher", teacherSchema)
+module.exports = mongoose.model("teacher", teacherSchema);

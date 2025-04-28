@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { getUserDetails } from '../../../redux/userRelated/userHandle';
 import { getSubjectList } from '../../../redux/sclassRelated/sclassHandle';
 import { updateStudentFields } from '../../../redux/studentRelated/studentHandle';
-
 import Popup from '../../../components/Popup';
-import { BlueButton } from '../../../components/buttonStyles';
-import {
-    Box, InputLabel,
-    MenuItem, Select,
-    Typography, Stack,
-    TextField, CircularProgress, FormControl
-} from '@mui/material';
 
 const StudentExamMarks = ({ situation }) => {
     const dispatch = useDispatch();
     const { currentUser, userDetails, loading } = useSelector((state) => state.user);
     const { subjectsList } = useSelector((state) => state.sclass);
     const { response, error, statestatus } = useSelector((state) => state.student);
-    const params = useParams()
+    const params = useParams();
 
     const [studentID, setStudentID] = useState("");
     const [subjectName, setSubjectName] = useState("");
@@ -28,16 +20,15 @@ const StudentExamMarks = ({ situation }) => {
 
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState("");
-    const [loader, setLoader] = useState(false)
+    const [loader, setLoader] = useState(false);
 
     useEffect(() => {
         if (situation === "Student") {
             setStudentID(params.id);
-            const stdID = params.id
+            const stdID = params.id;
             dispatch(getUserDetails(stdID, "Student"));
-        }
-        else if (situation === "Subject") {
-            const { studentID, subjectID } = params
+        } else if (situation === "Subject") {
+            const { studentID, subjectID } = params;
             setStudentID(studentID);
             dispatch(getUserDetails(studentID, "Student"));
             setChosenSubName(subjectID);
@@ -56,126 +47,102 @@ const StudentExamMarks = ({ situation }) => {
         );
         setSubjectName(selectedSubject.subName);
         setChosenSubName(selectedSubject._id);
-    }
+    };
 
-    const fields = { subName: chosenSubName, marksObtained }
+    const fields = { subName: chosenSubName, marksObtained };
 
     const submitHandler = (event) => {
-        event.preventDefault()
-        setLoader(true)
-        dispatch(updateStudentFields(studentID, fields, "UpdateExamResult"))
-    }
+        event.preventDefault();
+        setLoader(true);
+        dispatch(updateStudentFields(studentID, fields, "UpdateExamResult"));
+    };
 
     useEffect(() => {
         if (response) {
-            setLoader(false)
-            setShowPopup(true)
-            setMessage(response)
+            setLoader(false);
+            setShowPopup(true);
+            setMessage(response);
+        } else if (error) {
+            setLoader(false);
+            setShowPopup(true);
+            setMessage("Error occurred while updating marks");
+        } else if (statestatus === "added") {
+            setLoader(false);
+            setShowPopup(true);
+            setMessage("Done Successfully");
         }
-        else if (error) {
-            setLoader(false)
-            setShowPopup(true)
-            setMessage("error")
-        }
-        else if (statestatus === "added") {
-            setLoader(false)
-            setShowPopup(true)
-            setMessage("Done Successfully")
-        }
-    }, [response, statestatus, error])
+    }, [response, statestatus, error]);
 
     return (
-        <>
-            {loading
-                ?
-                <>
-                    <div>Loading...</div>
-                </>
-                :
-                <>
-                    <Box
-                        sx={{
-                            flex: '1 1 auto',
-                            alignItems: 'center',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                maxWidth: 550,
-                                px: 3,
-                                py: '100px',
-                                width: '100%'
-                            }}
-                        >
-                            <Stack spacing={1} sx={{ mb: 3 }}>
-                                <Typography variant="h4">
-                                    Student Name: {userDetails.name}
-                                </Typography>
-                                {currentUser.teachSubject &&
-                                    <Typography variant="h4">
-                                        Subject Name: {currentUser.teachSubject?.subName}
-                                    </Typography>
-                                }
-                            </Stack>
-                            <form onSubmit={submitHandler}>
-                                <Stack spacing={3}>
-                                    {
-                                        situation === "Student" &&
-                                        <FormControl fullWidth>
-                                            <InputLabel id="demo-simple-select-label">
-                                                Select Subject
-                                            </InputLabel>
-                                            <Select
-                                                labelId="demo-simple-select-label"
-                                                id="demo-simple-select"
-                                                value={subjectName}
-                                                label="Choose an option"
-                                                onChange={changeHandler} required
-                                            >
-                                                {subjectsList ?
-                                                    subjectsList.map((subject, index) => (
-                                                        <MenuItem key={index} value={subject.subName}>
-                                                            {subject.subName}
-                                                        </MenuItem>
-                                                    ))
-                                                    :
-                                                    <MenuItem value="Select Subject">
-                                                        Add Subjects For Marks
-                                                    </MenuItem>
-                                                }
-                                            </Select>
-                                        </FormControl>
-                                    }
-                                    <FormControl>
-                                        <TextField type="number" label='Enter marks'
-                                            value={marksObtained} required
-                                            onChange={(e) => setMarksObtained(e.target.value)}
-                                            InputLabelProps={{
-                                                shrink: true,
-                                            }}
-                                        />
-                                    </FormControl>
-                                </Stack>
-                                <BlueButton
-                                    fullWidth
-                                    size="large"
-                                    sx={{ mt: 3 }}
-                                    variant="contained"
-                                    type="submit"
-                                    disabled={loader}
+        <div className="flex justify-center items-center min-h-screen p-4 md:p-6">
+            {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600"></div>
+                </div>
+            ) : (
+                <div className="bg-gray-100/80 backdrop-blur-lg border border-gray-300/50 rounded-xl p-6 md:p-8 max-w-md w-full shadow-[0_0_15px_rgba(59,130,246,0.2)] animate-fadeIn font-poppins">
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 font-poppins">
+                            Student Name: {userDetails?.name || 'N/A'}
+                        </h2>
+                        {currentUser.teachSubject && (
+                            <h2 className="text-xl font-semibold text-gray-900 mt-2 font-poppins">
+                                Subject Name: {currentUser.teachSubject?.subName || 'N/A'}
+                            </h2>
+                        )}
+                    </div>
+                    <form onSubmit={submitHandler} className="space-y-4">
+                        {situation === "Student" && (
+                            <div>
+                                <label className="block text-gray-700 mb-2">Select Subject</label>
+                                <select
+                                    value={subjectName}
+                                    onChange={changeHandler}
+                                    className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins"
+                                    required
                                 >
-                                    {loader ? <CircularProgress size={24} color="inherit" /> : "Submit"}
-                                </BlueButton>
-                            </form>
-                        </Box>
-                    </Box>
+                                    <option value="">Select Subject</option>
+                                    {subjectsList ? (
+                                        subjectsList.map((subject, index) => (
+                                            <option key={index} value={subject.subName}>
+                                                {subject.subName}
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option value="">Add Subjects For Marks</option>
+                                    )}
+                                </select>
+                            </div>
+                        )}
+                        <div>
+                            <label className="block text-gray-700 mb-2">Enter Marks</label>
+                            <input
+                                type="number"
+                                value={marksObtained}
+                                onChange={(e) => setMarksObtained(e.target.value)}
+                                className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins"
+                                required
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={loader}
+                                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-blue-500/50 font-poppins flex items-center"
+                            >
+                                {loader ? (
+                                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white mr-2"></div>
+                                ) : (
+                                    'Submit'
+                                )}
+                            </button>
+                        </div>
+                    </form>
                     <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-                </>
-            }
-        </>
-    )
-}
+                </div>
+            )}
+        </div>
+    );
+};
 
-export default StudentExamMarks
+export default StudentExamMarks;
