@@ -11,6 +11,10 @@ const initialState = {
     error: null,
     response: null,
     getresponse: null,
+    marksLoading: false,
+    marksError: null,
+    attendanceLoading: false,
+    attendanceError: null,
 };
 
 const sclassSlice = createSlice({
@@ -72,6 +76,54 @@ const sclassSlice = createSlice({
             state.subjectsList = [];
             state.sclassesList = [];
         },
+        updateStudentMarksRequest: (state) => {
+            state.marksLoading = true;
+            state.marksError = null;
+        },
+        updateStudentMarksSuccess: (state, action) => {
+            const { studentID, subName, marksObtained } = action.payload;
+            const studentIndex = state.sclassStudents.findIndex(student => student._id === studentID);
+            if (studentIndex !== -1) {
+                const examResultIndex = state.sclassStudents[studentIndex].examResult.findIndex(
+                    result => result.subName === subName
+                );
+                if (examResultIndex !== -1) {
+                    state.sclassStudents[studentIndex].examResult[examResultIndex].marksObtained = marksObtained;
+                } else {
+                    state.sclassStudents[studentIndex].examResult.push({ subName, marksObtained });
+                }
+            }
+            state.marksLoading = false;
+            state.marksError = null;
+        },
+        updateStudentMarksFail: (state, action) => {
+            state.marksLoading = false;
+            state.marksError = action.payload;
+        },
+        updateStudentAttendanceRequest: (state) => {
+            state.attendanceLoading = true;
+            state.attendanceError = null;
+        },
+        updateStudentAttendanceSuccess: (state, action) => {
+            const { studentID, subName, status, date } = action.payload;
+            const studentIndex = state.sclassStudents.findIndex(student => student._id === studentID);
+            if (studentIndex !== -1) {
+                const attendanceIndex = state.sclassStudents[studentIndex].attendance.findIndex(
+                    att => att.subName === subName && new Date(att.date).toISOString().split('T')[0] === new Date(date).toISOString().split('T')[0]
+                );
+                if (attendanceIndex !== -1) {
+                    state.sclassStudents[studentIndex].attendance[attendanceIndex].status = status;
+                } else {
+                    state.sclassStudents[studentIndex].attendance.push({ subName, status, date: new Date(date) });
+                }
+            }
+            state.attendanceLoading = false;
+            state.attendanceError = null;
+        },
+        updateStudentAttendanceFail: (state, action) => {
+            state.attendanceLoading = false;
+            state.attendanceError = action.payload;
+        },
     },
 });
 
@@ -86,7 +138,13 @@ export const {
     getFailedTwo,
     resetSubjects,
     getSubDetailsSuccess,
-    getSubDetailsRequest
+    getSubDetailsRequest,
+    updateStudentMarksRequest,
+    updateStudentMarksSuccess,
+    updateStudentMarksFail,
+    updateStudentAttendanceRequest,
+    updateStudentAttendanceSuccess,
+    updateStudentAttendanceFail,
 } = sclassSlice.actions;
 
 export const sclassReducer = sclassSlice.reducer;

@@ -43,7 +43,8 @@ router.put('/RemoveAllStudentsSubAtten/:id', clearAllStudentsAttendanceBySubject
 router.put('/RemoveAllStudentsAtten/:id', clearAllStudentsAttendance);
 router.put('/RemoveStudentSubAtten/:id', removeStudentAttendanceBySubject);
 router.put('/RemoveStudentAtten/:id', removeStudentAttendance);
-
+router.put('/StudentAttendance/:id', studentAttendance);
+router.put('/UpdateExamResult/:id', updateExamResult);
 // Teacher
 router.post('/TeacherReg', teacherRegister);
 router.post('/TeacherLogin', teacherLogIn);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { StyledTableCell, StyledTableRow } from './styles';
 import { Table, TableBody, TableContainer, TableHead, TablePagination } from '@mui/material';
 
@@ -20,9 +20,11 @@ const TableTemplate = ({ buttonHaver: ButtonHaver, columns, rows }) => {
                                     {column.label}
                                 </StyledTableCell>
                             ))}
-                            <StyledTableCell align="center">
-                                Actions
-                            </StyledTableCell>
+                            {ButtonHaver && (
+                                <StyledTableCell align="center">
+                                    Actions
+                                </StyledTableCell>
+                            )}
                         </StyledTableRow>
                     </TableHead>
                     <TableBody>
@@ -36,16 +38,18 @@ const TableTemplate = ({ buttonHaver: ButtonHaver, columns, rows }) => {
                                             return (
                                                 <StyledTableCell key={column.id} align={column.align}>
                                                     {
-                                                        column.format && typeof value === 'number'
-                                                            ? column.format(value)
+                                                        column.format
+                                                            ? column.format(value, row)
                                                             : value
                                                     }
                                                 </StyledTableCell>
                                             );
                                         })}
-                                        <StyledTableCell align="center">
-                                            <ButtonHaver row={row} />
-                                        </StyledTableCell>
+                                        {ButtonHaver && (
+                                            <StyledTableCell align="center">
+                                                <ButtonHaver row={row} />
+                                            </StyledTableCell>
+                                        )}
                                     </StyledTableRow>
                                 );
                             })}
@@ -65,7 +69,7 @@ const TableTemplate = ({ buttonHaver: ButtonHaver, columns, rows }) => {
                 }}
             />
         </>
-    )
-}
+    );
+};
 
-export default TableTemplate
+export default TableTemplate;

@@ -14,9 +14,8 @@ const studentRegister = async (req, res) => {
         });
 
         if (existingStudent) {
-            res.send({ message: 'Roll Number already exists' });
-        }
-        else {
+            res.status(400).json({ message: 'Roll Number already exists', success: false });
+        } else {
             const student = new Student({
                 ...req.body,
                 school: req.body.adminID,
@@ -26,10 +25,10 @@ const studentRegister = async (req, res) => {
             let result = await student.save();
 
             result.password = undefined;
-            res.send(result);
+            res.status(201).json({ data: result, success: true });
         }
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: err.message, success: false });
     }
 };
 
@@ -39,20 +38,20 @@ const studentLogIn = async (req, res) => {
         if (student) {
             const validated = await bcrypt.compare(req.body.password, student.password);
             if (validated) {
-                student = await student.populate("school", "schoolName")
-                student = await student.populate("sclassName", "sclassName")
+                student = await student.populate("school", "schoolName");
+                student = await student.populate("sclassName", "sclassName");
                 student.password = undefined;
                 student.examResult = undefined;
                 student.attendance = undefined;
-                res.send(student);
+                res.status(200).json({ data: student, success: true });
             } else {
-                res.send({ message: "Invalid password" });
+                res.status(401).json({ message: "Invalid password", success: false });
             }
         } else {
-            res.send({ message: "Student not found" });
+            res.status(404).json({ message: "Student not found", success: false });
         }
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: err.message, success: false });
     }
 };
 
@@ -63,12 +62,12 @@ const getStudents = async (req, res) => {
             let modifiedStudents = students.map((student) => {
                 return { ...student._doc, password: undefined };
             });
-            res.send(modifiedStudents);
+            res.status(200).json({ data: modifiedStudents, success: true });
         } else {
-            res.send({ message: "No students found" });
+            res.status(404).json({ message: "No students found", success: false });
         }
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: err.message, success: false });
     }
 };
 
@@ -81,67 +80,76 @@ const getStudentDetail = async (req, res) => {
             .populate("attendance.subName", "subName sessions");
         if (student) {
             student.password = undefined;
-            res.send(student);
-        }
-        else {
-            res.send({ message: "No student found" });
+            res.status(200).json({ data: student, success: true });
+        } else {
+            res.status(404).json({ message: "No student found", success: false });
         }
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: err.message, success: false });
     }
-}
+};
 
 const deleteStudent = async (req, res) => {
     try {
-        const result = await Student.findByIdAndDelete(req.params.id)
-        res.send(result)
+        const result = await Student.findByIdAndDelete(req.params.id);
+        if (result) {
+            res.status(200).json({ data: result, success: true });
+        } else {
+            res.status(404).json({ message: "Student not found", success: false });
+        }
     } catch (error) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
-}
+};
 
 const deleteStudents = async (req, res) => {
     try {
-        const result = await Student.deleteMany({ school: req.params.id })
+        const result = await Student.deleteMany({ school: req.params.id });
         if (result.deletedCount === 0) {
-            res.send({ message: "No students found to delete" })
+            res.status(404).json({ message: "No students found to delete", success: false });
         } else {
-            res.send(result)
+            res.status(200).json({ data: result, success: true });
         }
     } catch (error) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
-}
+};
 
 const deleteStudentsByClass = async (req, res) => {
     try {
-        const result = await Student.deleteMany({ sclassName: req.params.id })
+        const result = await Student.deleteMany({ sclassName: req.params.id });
         if (result.deletedCount === 0) {
-            res.send({ message: "No students found to delete" })
+            res.status(404).json({ message: "No students found to delete", success: false });
         } else {
-            res.send(result)
+            res.status(200).json({ data: result, success: true });
         }
     } catch (error) {
-        res.status(500).json(err);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
-}
+};
 
 const updateStudent = async (req, res) => {
     try {
         if (req.body.password) {
-            const salt = await bcrypt.genSalt(10)
-            res.body.password = await bcrypt.hash(res.body.password, salt)
+            const salt = await bcrypt.genSalt(10);
+            req.body.password = await bcrypt.hash(req.body.password, salt);
         }
-        let result = await Student.findByIdAndUpdate(req.params.id,
+        let result = await Student.findByIdAndUpdate(
+            req.params.id,
             { $set: req.body },
-            { new: true })
+            { new: true }
+        );
 
-        result.password = undefined;
-        res.send(result)
+        if (result) {
+            result.password = undefined;
+            res.status(200).json({ data: result, success: true });
+        } else {
+            res.status(404).json({ message: "Student not found", success: false });
+        }
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
-}
+};
 
 const updateExamResult = async (req, res) => {
     const { subName, marksObtained } = req.body;
@@ -150,7 +158,7 @@ const updateExamResult = async (req, res) => {
         const student = await Student.findById(req.params.id);
 
         if (!student) {
-            return res.send({ message: 'Student not found' });
+            return res.status(404).json({ message: 'Student not found', success: false });
         }
 
         const existingResult = student.examResult.find(
@@ -164,9 +172,10 @@ const updateExamResult = async (req, res) => {
         }
 
         const result = await student.save();
-        return res.send(result);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        console.error("Error updating exam result:", error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
 
@@ -174,39 +183,55 @@ const studentAttendance = async (req, res) => {
     const { subName, status, date } = req.body;
 
     try {
-        const student = await Student.findById(req.params.id);
+        console.log(`Updating attendance for student ${req.params.id} on date ${date} for subject ${subName} with status ${status}`);
 
+        const student = await Student.findById(req.params.id);
         if (!student) {
-            return res.send({ message: 'Student not found' });
+            console.error(`Student not found: ${req.params.id}`);
+            return res.status(404).json({ message: 'Student not found', success: false });
         }
 
         const subject = await Subject.findById(subName);
+        if (!subject) {
+            console.error(`Subject not found: ${subName}`);
+            return res.status(404).json({ message: 'Subject not found', success: false });
+        }
+
+        const attendanceDate = new Date(date);
+        if (isNaN(attendanceDate.getTime())) {
+            console.error(`Invalid date format: ${date}`);
+            return res.status(400).json({ message: 'Invalid date format', success: false });
+        }
 
         const existingAttendance = student.attendance.find(
             (a) =>
-                a.date.toDateString() === new Date(date).toDateString() &&
+                a.date.toISOString().split('T')[0] === attendanceDate.toISOString().split('T')[0] &&
                 a.subName.toString() === subName
         );
 
         if (existingAttendance) {
+            console.log(`Updating existing attendance for student ${student.name} on ${date}`);
             existingAttendance.status = status;
         } else {
-            // Check if the student has already attended the maximum number of sessions
             const attendedSessions = student.attendance.filter(
                 (a) => a.subName.toString() === subName
             ).length;
 
             if (attendedSessions >= subject.sessions) {
-                return res.send({ message: 'Maximum attendance limit reached' });
+                console.warn(`Maximum attendance limit reached for student ${student.name} in subject ${subName}`);
+                return res.status(400).json({ message: 'Maximum attendance limit reached', success: false });
             }
 
-            student.attendance.push({ date, status, subName });
+            console.log(`Adding new attendance for student ${student.name} on ${date}`);
+            student.attendance.push({ date: attendanceDate, status, subName });
         }
 
         const result = await student.save();
-        return res.send(result);
+        console.log(`Attendance updated successfully for student ${student.name}`);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        console.error("Error updating attendance:", error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
 
@@ -218,43 +243,40 @@ const clearAllStudentsAttendanceBySubject = async (req, res) => {
             { 'attendance.subName': subName },
             { $pull: { attendance: { subName } } }
         );
-        return res.send(result);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
 
 const clearAllStudentsAttendance = async (req, res) => {
-    const schoolId = req.params.id
+    const schoolId = req.params.id;
 
     try {
         const result = await Student.updateMany(
             { school: schoolId },
             { $set: { attendance: [] } }
         );
-
-        return res.send(result);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
 
 const removeStudentAttendanceBySubject = async (req, res) => {
     const studentId = req.params.id;
-    const subName = req.body.subId
+    const subName = req.body.subId;
 
     try {
         const result = await Student.updateOne(
             { _id: studentId },
             { $pull: { attendance: { subName: subName } } }
         );
-
-        return res.send(result);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
-
 
 const removeStudentAttendance = async (req, res) => {
     const studentId = req.params.id;
@@ -264,13 +286,11 @@ const removeStudentAttendance = async (req, res) => {
             { _id: studentId },
             { $set: { attendance: [] } }
         );
-
-        return res.send(result);
+        return res.status(200).json({ data: result, success: true });
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ message: 'Server error', error: error.message, success: false });
     }
 };
-
 
 module.exports = {
     studentRegister,
@@ -283,7 +303,6 @@ module.exports = {
     studentAttendance,
     deleteStudentsByClass,
     updateExamResult,
-
     clearAllStudentsAttendanceBySubject,
     clearAllStudentsAttendance,
     removeStudentAttendanceBySubject,

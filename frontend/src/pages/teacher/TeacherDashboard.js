@@ -12,7 +12,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import TeacherSideBar from './TeacherSideBar';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import Logout from '../Logout'
+import Logout from '../Logout';
 import AccountMenu from '../../components/AccountMenu';
 import { AppBar, Drawer } from '../../components/styles';
 import StudentAttendance from '../admin/studentRelated/StudentAttendance';
@@ -22,6 +22,7 @@ import TeacherComplain from './TeacherComplain';
 import TeacherHomePage from './TeacherHomePage';
 import TeacherProfile from './TeacherProfile';
 import TeacherViewStudent from './TeacherViewStudent';
+import TeacherClassMarks from './TeacherClassMarks';
 import StudentExamMarks from '../admin/studentRelated/StudentExamMarks';
 
 const TeacherDashboard = () => {
@@ -82,6 +83,7 @@ const TeacherDashboard = () => {
                         <Route path="/Teacher/complain" element={<TeacherComplain />} />
 
                         <Route path="/Teacher/class" element={<TeacherClassDetails />} />
+                        <Route path="/Teacher/class/marks" element={<TeacherClassMarks />} />
                         <Route path="/Teacher/class/student/:id" element={<TeacherViewStudent />} />
 
                         <Route path="/Teacher/class/student/attendance/:studentID/:subjectID" element={<StudentAttendance situation="Subject" />} />
@@ -93,9 +95,9 @@ const TeacherDashboard = () => {
             </Box>
         </>
     );
-}
+};
 
-export default TeacherDashboard
+export default TeacherDashboard;
 
 const styles = {
     boxStyled: {
@@ -122,4 +124,4 @@ const styles = {
             display: 'none',
         },
     },
-}
+};
