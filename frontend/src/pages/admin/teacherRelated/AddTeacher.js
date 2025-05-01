@@ -32,8 +32,7 @@ const AddTeacher = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [teachSubjects, setTeachSubjects] = useState([]);
-    const [teachSclasses, setTeachSclasses] = useState([]);
+    const [teachClasses, setTeachClasses] = useState([]); // [{ classId, subjects: [] }]
 
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState("");
@@ -43,17 +42,54 @@ const AddTeacher = () => {
         if (teacherID && teacherDetails) {
             setName(teacherDetails.name || '');
             setEmail(teacherDetails.email || '');
-            setTeachSubjects(teacherDetails.teachSubjects?.map(subject => subject._id) || []);
-            setTeachSclasses(teacherDetails.teachSclasses?.map(sclass => sclass._id) || []);
+            // Check localStorage for the class-subject mapping
+            const storedMapping = localStorage.getItem(`teacherMapping_${teacherID}`);
+            if (storedMapping) {
+                setTeachClasses(JSON.parse(storedMapping));
+            } else {
+                setTeachClasses(
+                    teacherDetails.teachClasses?.map(cls => ({
+                        classId: cls.classId || cls._id,
+                        subjects: cls.subjects?.map(subject => subject._id || subject) || []
+                    })) || teacherDetails.teachSclasses?.map(cls => ({
+                        classId: cls._id || cls,
+                        subjects: teacherDetails.teachSubjects?.map(subject => subject._id || subject) || []
+                    })) || []
+                );
+            }
         }
     }, [teacherDetails, teacherID]);
 
     const role = "Teacher";
     const school = currentUser?._id;
 
+    // Convert teachClasses to teachSclasses and teachSubjects for backend compatibility
+    const teachSclasses = teachClasses.map(cls => cls.classId);
+    const teachSubjects = [...new Set(teachClasses.flatMap(cls => cls.subjects))]; // Flatten and deduplicate subjects
+
     const fields = teacherID
-        ? { teacherId: teacherID, teachSubjects, teachSclasses }
-        : { name, email, password, role, school, teachSubjects, teachSclasses };
+        ? { teacherId: teacherID, teachSclasses, teachSubjects }
+        : { name, email, password, role, school, teachSclasses, teachSubjects };
+
+    const handleClassChange = (classId) => {
+        if (teachClasses.some(cls => cls.classId === classId)) {
+            setTeachClasses(teachClasses.filter(cls => cls.classId !== classId));
+        } else {
+            setTeachClasses([...teachClasses, { classId, subjects: [] }]);
+        }
+    };
+
+    const handleSubjectChange = (classId, subjectId) => {
+        setTeachClasses(teachClasses.map(cls => {
+            if (cls.classId === classId) {
+                const updatedSubjects = cls.subjects.includes(subjectId)
+                    ? cls.subjects.filter(id => id !== subjectId)
+                    : [...cls.subjects, subjectId];
+                return { ...cls, subjects: updatedSubjects };
+            }
+            return cls;
+        }));
+    };
 
     const submitHandler = (event) => {
         event.preventDefault();
@@ -72,6 +108,10 @@ const AddTeacher = () => {
 
     useEffect(() => {
         if (status === 'added' || status === 'success') {
+            // Store the class-subject mapping in localStorage
+            if (teacherID) {
+                localStorage.setItem(`teacherMapping_${teacherID}`, JSON.stringify(teachClasses));
+            }
             dispatch(underControl());
             navigate("/Admin/teachers");
         } else if (status === 'failed') {
@@ -83,7 +123,7 @@ const AddTeacher = () => {
             setShowPopup(true);
             setLoader(false);
         }
-    }, [status, navigate, error, response, dispatch]);
+    }, [status, navigate, error, response, dispatch, teacherID, teachClasses]);
 
     if (!currentUser) {
         return <div className="flex justify-center items-center h-64">
@@ -142,40 +182,43 @@ const AddTeacher = () => {
                         </>
                     )}
                     <div>
-                        <label className="block text-gray-700 mb-2">Classes</label>
-                        <select
-                            multiple
-                            value={teachSclasses}
-                            onChange={(event) => setTeachSclasses(Array.from(event.target.selectedOptions, option => option.value))}
-                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
-                        >
-                            {sclassesList.map((sclass) => (
-                                <option key={sclass._id} value={sclass._id}>
-                                    {sclass.sclassName}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="text-sm text-gray-500 mt-1 font-poppins">
-                            Hold Ctrl (or Command on Mac) to select multiple classes.
-                        </p>
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 mb-2">Subjects</label>
-                        <select
-                            multiple
-                            value={teachSubjects}
-                            onChange={(event) => setTeachSubjects(Array.from(event.target.selectedOptions, option => option.value))}
-                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
-                        >
-                            {subjectsList.map((subject) => (
-                                <option key={subject._id} value={subject._id}>
-                                    {subject.subName}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="text-sm text-gray-500 mt-1 font-poppins">
-                            Hold Ctrl (or Command on Mac) to select multiple subjects.
-                        </p>
+                        <label className="block text-gray-700 mb-2">Classes and Subjects</label>
+                        {sclassesList.map((sclass) => (
+                            <div key={sclass._id} className="mb-4">
+                                <label className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={teachClasses.some(cls => cls.classId === sclass._id)}
+                                        onChange={() => handleClassChange(sclass._id)}
+                                        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <span>{sclass.sclassName}</span>
+                                </label>
+                                {teachClasses.some(cls => cls.classId === sclass._id) && (
+                                    <div className="mt-2 ml-6">
+                                        <label className="block text-gray-600 text-sm mb-1">Select Subjects for {sclass.sclassName}</label>
+                                        <select
+                                            multiple
+                                            value={teachClasses.find(cls => cls.classId === sclass._id)?.subjects || []}
+                                            onChange={(event) => {
+                                                const selectedSubjects = Array.from(event.target.selectedOptions, option => option.value);
+                                                selectedSubjects.forEach(subjectId => handleSubjectChange(sclass._id, subjectId));
+                                            }}
+                                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
+                                        >
+                                            {subjectsList.map((subject) => (
+                                                <option key={subject._id} value={subject._id}>
+                                                    {subject.subName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-sm text-gray-500 mt-1 font-poppins">
+                                            Hold Ctrl (or Command on Mac) to select multiple subjects.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
                 <div className="flex justify-end mt-6">
