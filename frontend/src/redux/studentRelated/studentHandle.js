@@ -26,16 +26,25 @@ export const updateStudentFields = (id, fields, address) => async (dispatch) => 
     dispatch(getRequest());
 
     try {
+        console.log(`Sending request to ${address}/${id} with data:`, fields);
         const result = await axios.put(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`, fields, {
             headers: { 'Content-Type': 'application/json' },
         });
-        if (result.data.message) {
+        
+        // Vérifier si la réponse contient un message d'erreur
+        if (result.data.message && (result.status >= 400 || result.data.error)) {
+            console.error(`Error from ${address}:`, result.data.message);
             dispatch(getFailed(result.data.message));
         } else {
+            console.log(`Success from ${address}:`, result.data);
             dispatch(stuffDone());
         }
     } catch (error) {
-        dispatch(getError(error));
+        console.error(`Error in ${address}:`, error.response ? error.response.data : error.message);
+        const errorMessage = error.response && error.response.data && error.response.data.message
+            ? error.response.data.message
+            : error.message || 'Une erreur est survenue';
+        dispatch(getError(errorMessage));
     }
 }
 

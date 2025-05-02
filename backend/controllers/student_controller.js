@@ -74,20 +74,41 @@ const getStudents = async (req, res) => {
 
 const getStudentDetail = async (req, res) => {
     try {
+        console.log(`Récupération des détails de l'étudiant avec ID: ${req.params.id}`);
+        
         let student = await Student.findById(req.params.id)
             .populate("school", "schoolName")
             .populate("sclassName", "sclassName")
             .populate("examResult.subName", "subName")
             .populate("attendance.subName", "subName sessions");
+        
         if (student) {
+            // Masquer le mot de passe
             student.password = undefined;
-            res.send(student);
+            
+            // Vérifier si les résultats d'examen existent
+            if (student.examResult && student.examResult.length > 0) {
+                console.log(`L'étudiant a ${student.examResult.length} résultats d'examen`);
+            } else {
+                console.log(`Aucun résultat d'examen trouvé pour l'étudiant`);
+            }
+            
+            // Vérifier si les données d'assiduité existent
+            if (student.attendance && student.attendance.length > 0) {
+                console.log(`L'étudiant a ${student.attendance.length} enregistrements d'assiduité`);
+            } else {
+                console.log(`Aucune donnée d'assiduité trouvée pour l'étudiant`);
+            }
+            
+            res.status(200).send(student);
         }
         else {
-            res.send({ message: "No student found" });
+            console.log(`Aucun étudiant trouvé avec l'ID: ${req.params.id}`);
+            res.status(404).send({ message: "No student found" });
         }
     } catch (err) {
-        res.status(500).json(err);
+        console.error(`Erreur lors de la récupération des détails de l'étudiant:`, err);
+        res.status(500).json({ message: "Erreur lors de la récupération des détails de l'étudiant", error: err.message });
     }
 }
 
@@ -147,10 +168,31 @@ const updateExamResult = async (req, res) => {
     const { subName, marksObtained } = req.body;
 
     try {
+        // Vérifier si l'ID de l'étudiant est valide
+        if (!req.params.id) {
+            return res.status(400).send({ message: 'Student ID is required' });
+        }
+
         const student = await Student.findById(req.params.id);
 
         if (!student) {
-            return res.send({ message: 'Student not found' });
+            return res.status(404).send({ message: 'Student not found' });
+        }
+
+        // Vérifier si l'ID de la matière est valide
+        if (!subName) {
+            return res.status(400).send({ message: 'Subject ID is required' });
+        }
+
+        // Vérifier si les notes sont valides
+        if (marksObtained === undefined || marksObtained === null) {
+            return res.status(400).send({ message: 'Marks are required' });
+        }
+
+        // Vérifier si la matière existe
+        const subject = await Subject.findById(subName);
+        if (!subject) {
+            return res.status(404).send({ message: 'Subject not found' });
         }
 
         const existingResult = student.examResult.find(
@@ -164,9 +206,10 @@ const updateExamResult = async (req, res) => {
         }
 
         const result = await student.save();
-        return res.send(result);
+        return res.status(200).send(result);
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error in updateExamResult:', error);
+        return res.status(500).send({ message: 'Error updating exam result', error: error.message });
     }
 };
 
@@ -174,19 +217,48 @@ const studentAttendance = async (req, res) => {
     const { subName, status, date } = req.body;
 
     try {
+        // Vérifier si l'ID de l'étudiant est valide
+        if (!req.params.id) {
+            return res.status(400).send({ message: 'Student ID is required' });
+        }
+
         const student = await Student.findById(req.params.id);
 
         if (!student) {
-            return res.send({ message: 'Student not found' });
+            return res.status(404).send({ message: 'Student not found' });
+        }
+
+        // Vérifier si l'ID de la matière est valide
+        if (!subName) {
+            return res.status(400).send({ message: 'Subject ID is required' });
         }
 
         const subject = await Subject.findById(subName);
 
-        const existingAttendance = student.attendance.find(
-            (a) =>
-                a.date.toDateString() === new Date(date).toDateString() &&
-                a.subName.toString() === subName
-        );
+        if (!subject) {
+            return res.status(404).send({ message: 'Subject not found' });
+        }
+
+        // Vérifier si la date est valide
+        if (!date) {
+            return res.status(400).send({ message: 'Date is required' });
+        }
+
+        // Ajouter des logs pour déboguer la comparaison des dates
+        console.log('Date reçue:', date);
+        console.log('Date formatée:', new Date(date).toISOString());
+        
+        // Utiliser une méthode plus fiable pour comparer les dates
+        const formattedDate = new Date(date).toISOString().split('T')[0];
+        
+        const existingAttendance = student.attendance.find((a) => {
+            // Convertir la date de l'enregistrement au même format pour la comparaison
+            const attendanceDate = new Date(a.date).toISOString().split('T')[0];
+            console.log('Comparaison de dates:', attendanceDate, formattedDate);
+            console.log('Comparaison de matières:', a.subName.toString(), subName);
+            
+            return attendanceDate === formattedDate && a.subName.toString() === subName;
+        });
 
         if (existingAttendance) {
             existingAttendance.status = status;
@@ -195,18 +267,84 @@ const studentAttendance = async (req, res) => {
             const attendedSessions = student.attendance.filter(
                 (a) => a.subName.toString() === subName
             ).length;
-
-            if (attendedSessions >= subject.sessions) {
-                return res.send({ message: 'Maximum attendance limit reached' });
+            
+            console.log('Sessions assistées:', attendedSessions);
+            console.log('Sessions totales de la matière:', subject.sessions);
+            
+            // Vérifier si le nombre de sessions est défini et est un nombre valide
+            const maxSessions = subject.sessions ? parseInt(subject.sessions, 10) : 0;
+            
+            if (!isNaN(maxSessions) && maxSessions > 0 && attendedSessions >= maxSessions) {
+                return res.status(400).send({ 
+                    message: 'Maximum attendance limit reached', 
+                    details: `L'étudiant a déjà assisté à ${attendedSessions} sessions sur ${maxSessions} autorisées.` 
+                });
             }
-
-            student.attendance.push({ date, status, subName });
+            
+            // Créer un nouvel enregistrement d'assiduité avec la date au format ISO
+            const newAttendance = { 
+                date: new Date(date), 
+                status, 
+                subName 
+            };
+            
+            console.log('Ajout d\'un nouvel enregistrement d\'assiduité:', newAttendance);
+            student.attendance.push(newAttendance);
         }
 
-        const result = await student.save();
-        return res.send(result);
+        try {
+            const result = await student.save();
+            console.log('Enregistrement réussi:', result);
+            return res.status(200).send(result);
+        } catch (saveError) {
+            console.error('Erreur lors de l\'enregistrement de l\'assiduité:', saveError);
+            
+            // Gérer les erreurs de validation MongoDB
+            if (saveError.name === 'ValidationError') {
+                const validationErrors = {};
+                
+                // Extraire les messages d'erreur de validation
+                Object.keys(saveError.errors).forEach(key => {
+                    validationErrors[key] = saveError.errors[key].message;
+                });
+                
+                return res.status(400).send({
+                    message: 'Erreur de validation',
+                    validationErrors,
+                    error: saveError.message
+                });
+            }
+            
+            // Gérer les erreurs de duplication
+            if (saveError.code === 11000) {
+                return res.status(400).send({
+                    message: 'Enregistrement en double',
+                    error: 'Un enregistrement avec ces informations existe déjà.'
+                });
+            }
+            
+            return res.status(500).send({ 
+                message: 'Erreur lors de l\'enregistrement de l\'assiduité', 
+                error: saveError.message,
+                stack: saveError.stack
+            });
+        }
     } catch (error) {
-        res.status(500).json(error);
+        console.error('Error in studentAttendance:', error);
+        
+        // Fournir des détails sur l'erreur
+        const errorDetails = {
+            message: 'Erreur lors de la mise à jour de l\'assiduité',
+            error: error.message,
+            stack: error.stack
+        };
+        
+        // Ajouter des détails spécifiques en fonction du type d'erreur
+        if (error.name === 'CastError') {
+            errorDetails.details = `Valeur invalide pour le champ ${error.path}: ${error.value}`;
+        }
+        
+        return res.status(500).send(errorDetails);
     }
 };
 

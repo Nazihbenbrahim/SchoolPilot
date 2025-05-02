@@ -4,6 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { loginUser } from '../redux/userRelated/userHandle';
 import Popup from '../components/Popup';
+import { Box, Container, Paper, Typography, TextField, Button, InputAdornment, IconButton, Checkbox, FormControlLabel, useTheme } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import EnsitLogoHorizontal from '../assets/logos/EnsitLogoHorizontal';
+import EnsitLogoUnesco from '../assets/logos/EnsitLogoUnesco';
 
 const LoginPage = ({ role }) => {
   const dispatch = useDispatch();
@@ -106,211 +110,278 @@ const LoginPage = ({ role }) => {
     }
   }, [status, currentRole, navigate, error, response, currentUser]);
 
+  const theme = useTheme();
+
+  // Styled components
+  const LoginContainer = styled(Box)(({ theme }) => ({
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(2),
+    backgroundColor: theme.palette.background.default,
+    backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light}15 0%, ${theme.palette.primary.main}10 100%)`,
+  }));
+
+  const LoginCard = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(4),
+    borderRadius: theme.shape.borderRadius * 2,
+    maxWidth: '450px',
+    width: '100%',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    backgroundColor: theme.palette.background.paper,
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '4px',
+      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+    },
+  }));
+
+  const StyledTextField = styled(TextField)(({ theme }) => ({
+    marginBottom: theme.spacing(3),
+    '& .MuiOutlinedInput-root': {
+      '&:hover fieldset': {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+  }));
+
+  const LoginButton = styled(Button)(({ theme }) => ({
+    padding: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
+    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+    '&:hover': {
+      background: `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+    },
+  }));
+
+  const GuestButton = styled(Button)(({ theme }) => ({
+    padding: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
+    borderColor: theme.palette.primary.main,
+    color: theme.palette.primary.main,
+    '&:hover': {
+      backgroundColor: `${theme.palette.primary.main}10`,
+    },
+  }));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-gray-900 via-gray-900 to-blue-gray-800 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg border border-blue-gray-700/50 shadow-xl rounded-xl p-8 max-w-md w-full animate-fadeIn">
-        <h2 className="text-3xl font-poppins font-semibold text-blue-gray-100 mb-2 text-center tracking-wide">
+    <LoginContainer>
+      <LoginCard elevation={4}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+          <EnsitLogoHorizontal height={60} />
+        </Box>
+
+        <Typography variant="h5" component="h1" align="center" fontWeight="bold" gutterBottom>
           {role} Login
-        </h2>
-        <p className="text-center text-blue-gray-300 mb-6">
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
           Welcome back! Please enter your details
-        </p>
+        </Typography>
         <form onSubmit={handleSubmit}>
           {role === 'Student' ? (
             <>
-              <div className="mb-4">
-                <label
-                  htmlFor="rollNumber"
-                  className="block text-blue-gray-200 font-poppins mb-2"
-                >
-                  Roll Number
-                </label>
-                <input
-                  type="number"
-                  id="rollNumber"
-                  name="rollNumber"
-                  className={`w-full p-3 bg-blue-gray-800/50 border border-blue-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue text-white placeholder-blue-gray-400 transition-all duration-300 ${
-                    rollNumberError ? 'border-red-500' : ''
-                  }`}
-                  placeholder="Enter your Roll Number"
-                  autoComplete="off"
-                  autoFocus
-                  onChange={handleInputChange}
-                />
-                {rollNumberError && (
-                  <p className="text-red-500 text-sm mt-1">Roll Number is required</p>
-                )}
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="studentName"
-                  className="block text-blue-gray-200 font-poppins mb-2"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="studentName"
-                  name="studentName"
-                  className={`w-full p-3 bg-blue-gray-800/50 border border-blue-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue text-white placeholder-blue-gray-400 transition-all duration-300 ${
-                    studentNameError ? 'border-red-500' : ''
-                  }`}
-                  placeholder="Enter your name"
-                  autoComplete="name"
-                  autoFocus
-                  onChange={handleInputChange}
-                />
-                {studentNameError && (
-                  <p className="text-red-500 text-sm mt-1">Name is required</p>
-                )}
-              </div>
+              <StyledTextField
+                fullWidth
+                id="rollNumber"
+                name="rollNumber"
+                label="Roll Number"
+                type="number"
+                error={rollNumberError}
+                helperText={rollNumberError ? 'Roll Number is required' : ''}
+                onChange={handleInputChange}
+                autoFocus
+                variant="outlined"
+              />
+
+              <StyledTextField
+                fullWidth
+                id="studentName"
+                name="studentName"
+                label="Name"
+                type="text"
+                error={studentNameError}
+                helperText={studentNameError ? 'Name is required' : ''}
+                onChange={handleInputChange}
+                variant="outlined"
+              />
             </>
           ) : (
-            <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block text-blue-gray-200 font-poppins mb-2"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                className={`w-full p-3 bg-blue-gray-800/50 border border-blue-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue text-white placeholder-blue-gray-400 transition-all duration-300 ${
-                  emailError ? 'border-red-500' : ''
-                }`}
-                placeholder="Enter your email"
-                autoComplete="email"
-                autoFocus
-                onChange={handleInputChange}
-              />
-              {emailError && (
-                <p className="text-red-500 text-sm mt-1">Email is required</p>
-              )}
-            </div>
+            <StyledTextField
+              fullWidth
+              id="email"
+              name="email"
+              label="Email"
+              type="email"
+              error={emailError}
+              helperText={emailError ? 'Email is required' : ''}
+              onChange={handleInputChange}
+              autoFocus
+              variant="outlined"
+            />
           )}
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-blue-gray-200 font-poppins mb-2"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={toggle ? 'text' : 'password'}
-                id="password"
-                name="password"
-                className={`w-full p-3 bg-blue-gray-800/50 border border-blue-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue text-white placeholder-blue-gray-400 transition-all duration-300 ${
-                  passwordError ? 'border-red-500' : ''
-                }`}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                onChange={handleInputChange}
-              />
-              <button
-                type="button"
-                onClick={() => setToggle(!toggle)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-gray-400 hover:text-accent-blue transition-colors duration-300"
-              >
-                {toggle ? <Visibility /> : <VisibilityOff />}
-              </button>
-            </div>
-            {passwordError && (
-              <p className="text-red-500 text-sm mt-1">Password is required</p>
-            )}
-          </div>
-          <div className="flex justify-between items-center mb-6">
-            <label className="flex items-center text-blue-gray-300 font-poppins">
-              <input type="checkbox" value="remember" className="mr-2 accent-accent-blue" />
-              Remember me
-            </label>
+
+          <StyledTextField
+            fullWidth
+            id="password"
+            name="password"
+            label="Password"
+            type={toggle ? 'text' : 'password'}
+            error={passwordError}
+            helperText={passwordError ? 'Password is required' : ''}
+            onChange={handleInputChange}
+            variant="outlined"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setToggle(!toggle)}
+                    edge="end"
+                  >
+                    {toggle ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <FormControlLabel
+              control={<Checkbox color="primary" />}
+              label="Remember me"
+            />
             <Link
               to="#"
-              className="text-accent-blue hover:underline hover:text-blue-400 transition-colors duration-300"
+              style={{ color: theme.palette.primary.main, textDecoration: 'none' }}
             >
               Forgot password?
             </Link>
-          </div>
-          <button
+          </Box>
+
+          <LoginButton
             type="submit"
-            className="w-full bg-gradient-to-r from-accent-blue to-blue-700 text-white font-poppins py-3 rounded-md hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-blue-500/50"
+            fullWidth
+            variant="contained"
             disabled={loader}
+            startIcon={
+              loader && (
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+              )
+            }
           >
-            {loader ? (
-              <svg
-                className="animate-spin h-5 w-5 mr-2 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
-              </svg>
-            ) : (
-              'Login'
-            )}
-          </button>
-          <button
+            {loader ? 'Logging in...' : 'Login'}
+          </LoginButton>
+
+          <GuestButton
             type="button"
+            fullWidth
+            variant="outlined"
             onClick={guestModeHandler}
-            className="w-full mt-3 bg-transparent border border-accent-blue text-accent-blue font-poppins py-3 rounded-md hover:bg-blue-800/50 hover:text-blue-400 transition-all duration-300"
             disabled={guestLoader}
           >
             Login as Guest
-          </button>
+          </GuestButton>
+
           {role === 'Admin' && (
-            <div className="mt-4 flex justify-center gap-2 text-blue-gray-300">
-              <span>Don't have an account?</span>
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary" display="inline">
+                Don't have an account?
+              </Typography>
               <Link
                 to="/Adminregister"
-                className="text-accent-blue hover:underline hover:text-blue-400 transition-colors duration-300"
+                style={{
+                  color: theme.palette.primary.main,
+                  textDecoration: 'none',
+                  marginLeft: '8px',
+                  fontWeight: 500,
+                }}
               >
                 Sign up
               </Link>
-            </div>
+            </Box>
           )}
         </form>
-      </div>
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <EnsitLogoUnesco height={40} opacity={0.7} />
+        </Box>
+      </LoginCard>
+
       {guestLoader && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <svg
-            className="animate-spin h-8 w-8 text-accent-blue mr-3"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            ></path>
-          </svg>
-          <span className="text-white font-poppins text-lg">Please Wait</span>
-        </div>
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <svg
+              className="animate-spin"
+              style={{ height: '32px', width: '32px', marginRight: '12px', color: theme.palette.primary.main }}
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              ></path>
+            </svg>
+            <Typography variant="h6" color="white">
+              Please Wait
+            </Typography>
+          </Box>
+        </Box>
       )}
+
       <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-    </div>
+    </LoginContainer>
   );
 };
 

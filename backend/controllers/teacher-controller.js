@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt');
 const Teacher = require('../models/teacherSchema.js');
 const Subject = require('../models/subjectSchema.js');
+const TeacherClassSubject = require('../models/teacherClassSubjectSchema.js');
 
 const teacherRegister = async (req, res) => {
-    const { name, email, password, role, school, teachSubjects, teachSclasses } = req.body;
+    const { name, email, password, role, school, teachSubjects, teachSclasses, classSubjectMappings } = req.body;
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(password, salt);
@@ -24,6 +25,7 @@ const teacherRegister = async (req, res) => {
             res.send({ message: 'Email already exists' });
         } else {
             let result = await teacher.save();
+            
             // Update subjects to reference this teacher
             if (teachSubjects && teachSubjects.length > 0) {
                 await Subject.updateMany(
@@ -31,10 +33,23 @@ const teacherRegister = async (req, res) => {
                     { $set: { teacher: teacher._id } }
                 );
             }
+            
+            // Créer les associations classe-matière pour l'enseignant
+            if (classSubjectMappings && classSubjectMappings.length > 0) {
+                const mappingsToSave = classSubjectMappings.map(mapping => ({
+                    teacher: teacher._id,
+                    class: mapping.classId,
+                    subjects: mapping.subjects || []
+                }));
+                
+                await TeacherClassSubject.insertMany(mappingsToSave);
+            }
+            
             result.password = undefined;
             res.send(result);
         }
     } catch (err) {
+        console.error('Error in teacherRegister:', err);
         res.status(500).json(err);
     }
 };
@@ -48,8 +63,19 @@ const teacherLogIn = async (req, res) => {
                 teacher = await teacher.populate("teachSubjects", "subName sessions");
                 teacher = await teacher.populate("school", "schoolName");
                 teacher = await teacher.populate("teachSclasses", "sclassName");
-                teacher.password = undefined;
-                res.send(teacher);
+                
+                // Obtenir les associations classe-matière pour cet enseignant
+                const classSubjectMappings = await TeacherClassSubject.find({ teacher: teacher._id })
+                    .populate("class", "sclassName")
+                    .populate("subjects", "subName");
+                
+                // Ajouter les mappings à l'objet enseignant
+                const teacherObj = teacher.toObject();
+                teacherObj.classSubjectMappings = classSubjectMappings;
+                teacherObj.password = undefined;
+                
+                console.log(`Teacher logged in: ${teacher.name}, teachSclasses:`, teacher.teachSclasses);
+                res.send(teacherObj);
             } else {
                 res.send({ message: "Invalid password" });
             }
@@ -57,6 +83,7 @@ const teacherLogIn = async (req, res) => {
             res.send({ message: "Teacher not found" });
         }
     } catch (err) {
+        console.error("Error during teacher login:", err);
         res.status(500).json(err);
     }
 };
@@ -85,27 +112,36 @@ const getTeacherDetail = async (req, res) => {
             .populate("teachSubjects", "subName sessions")
             .populate("school", "schoolName")
             .populate("teachSclasses", "sclassName");
+            
         if (teacher) {
-            teacher.password = undefined;
-            res.send(teacher);
+            // Obtenir les associations classe-matière pour cet enseignant
+            const classSubjectMappings = await TeacherClassSubject.find({ teacher: teacher._id })
+                .populate("class", "sclassName")
+                .populate("subjects", "subName");
+            
+            // Ajouter les mappings à l'objet enseignant
+            const teacherObj = teacher.toObject();
+            teacherObj.classSubjectMappings = classSubjectMappings;
+            teacherObj.password = undefined;
+            
+            res.send(teacherObj);
         } else {
             res.send({ message: "No teacher found" });
         }
     } catch (err) {
+        console.error("Error in getTeacherDetail:", err);
         res.status(500).json(err);
     }
 };
 
 const updateTeacherSubjectsAndClasses = async (req, res) => {
-    const { teacherId, teachSubjects, teachSclasses } = req.body;
+    const { teacherId, teachSubjects, teachSclasses, classSubjectMappings } = req.body;
     try {
-        // Find the teacher to get the current subjects
         const teacher = await Teacher.findById(teacherId);
         if (!teacher) {
             return res.status(404).json({ message: "Teacher not found" });
         }
 
-        // Remove teacher reference from subjects that are no longer assigned
         const removedSubjects = teacher.teachSubjects.filter(
             (subjectId) => !teachSubjects.includes(subjectId.toString())
         );
@@ -116,7 +152,6 @@ const updateTeacherSubjectsAndClasses = async (req, res) => {
             );
         }
 
-        // Update the teacher with new subjects and classes
         const updatedTeacher = await Teacher.findByIdAndUpdate(
             teacherId,
             { teachSubjects, teachSclasses },
@@ -124,16 +159,42 @@ const updateTeacherSubjectsAndClasses = async (req, res) => {
         ).populate("teachSubjects", "subName sessions")
          .populate("teachSclasses", "sclassName");
 
-        // Add teacher reference to newly assigned subjects
         if (teachSubjects && teachSubjects.length > 0) {
             await Subject.updateMany(
                 { _id: { $in: teachSubjects } },
                 { $set: { teacher: updatedTeacher._id } }
             );
         }
+        
+        // Mettre à jour les associations classe-matière
+        if (classSubjectMappings && classSubjectMappings.length > 0) {
+            // Supprimer les anciennes associations
+            await TeacherClassSubject.deleteMany({ teacher: teacherId });
+            
+            // Créer les nouvelles associations
+            const mappingsToSave = classSubjectMappings.map(mapping => ({
+                teacher: teacherId,
+                class: mapping.classId,
+                subjects: mapping.subjects || []
+            }));
+            
+            await TeacherClassSubject.insertMany(mappingsToSave);
+            
+            // Récupérer les nouvelles associations pour les inclure dans la réponse
+            const newMappings = await TeacherClassSubject.find({ teacher: teacherId })
+                .populate("class", "sclassName")
+                .populate("subjects", "subName");
+                
+            // Ajouter les mappings à l'objet enseignant
+            const teacherObj = updatedTeacher.toObject();
+            teacherObj.classSubjectMappings = newMappings;
+            
+            return res.send(teacherObj);
+        }
 
         res.send(updatedTeacher);
     } catch (error) {
+        console.error("Error in updateTeacherSubjectsAndClasses:", error);
         res.status(500).json(error);
     }
 };
@@ -146,13 +207,18 @@ const deleteTeacher = async (req, res) => {
             return res.status(404).json({ message: "Teacher not found" });
         }
 
+        // Supprimer les références dans les matières
         await Subject.updateMany(
             { teacher: deletedTeacher._id },
             { $unset: { teacher: 1 } }
         );
+        
+        // Supprimer les associations classe-matière
+        await TeacherClassSubject.deleteMany({ teacher: req.params.id });
 
         res.send(deletedTeacher);
     } catch (error) {
+        console.error("Error in deleteTeacher:", error);
         res.status(500).json(error);
     }
 };

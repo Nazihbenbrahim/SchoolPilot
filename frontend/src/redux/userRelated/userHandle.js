@@ -59,12 +59,33 @@ export const getUserDetails = (id, address) => async (dispatch) => {
     dispatch(getRequest());
 
     try {
+        console.log(`Récupération des détails de l'utilisateur: ${address}/${id}`);
         const result = await axios.get(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`);
+        
         if (result.data) {
+            console.log(`Données reçues pour ${address}/${id}:`, result.data);
+            
+            // Vérifier les données d'examen
+            if (address === 'Student' && result.data.examResult) {
+                console.log(`Résultats d'examen trouvés: ${result.data.examResult.length}`);
+            }
+            
+            // Vérifier les données d'assiduité
+            if (address === 'Student' && result.data.attendance) {
+                console.log(`Données d'assiduité trouvées: ${result.data.attendance.length}`);
+            }
+            
             dispatch(doneSuccess(result.data));
+        } else {
+            console.log(`Aucune donnée reçue pour ${address}/${id}`);
+            dispatch(getFailed("Aucune donnée trouvée"));
         }
     } catch (error) {
-        dispatch(getError(error));
+        console.error(`Erreur lors de la récupération des détails de ${address}/${id}:`, error);
+        const errorMessage = error.response && error.response.data && error.response.data.message
+            ? error.response.data.message
+            : error.message || 'Une erreur est survenue';
+        dispatch(getError(errorMessage));
     }
 };
 

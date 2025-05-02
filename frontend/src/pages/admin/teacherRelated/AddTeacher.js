@@ -6,6 +6,7 @@ import { getTeacherDetails } from '../../../redux/teacherRelated/teacherHandle';
 import { registerUser, updateTeacherSubjectsAndClasses } from '../../../redux/userRelated/userHandle';
 import { underControl } from '../../../redux/userRelated/userSlice';
 import Popup from '../../../components/Popup';
+import ClassSubjectMapping from './ClassSubjectMapping';
 
 const AddTeacher = () => {
     const dispatch = useDispatch();
@@ -34,6 +35,7 @@ const AddTeacher = () => {
     const [password, setPassword] = useState('');
     const [teachSubjects, setTeachSubjects] = useState([]);
     const [teachSclasses, setTeachSclasses] = useState([]);
+    const [classSubjectMappings, setClassSubjectMappings] = useState([]);
 
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState("");
@@ -51,9 +53,25 @@ const AddTeacher = () => {
     const role = "Teacher";
     const school = currentUser?._id;
 
-    const fields = teacherID
-        ? { teacherId: teacherID, teachSubjects, teachSclasses }
-        : { name, email, password, role, school, teachSubjects, teachSclasses };
+    // Préparer les données pour l'API
+    const prepareFields = () => {
+        // Extraire toutes les classes sélectionnées
+        const selectedClasses = classSubjectMappings.map(mapping => mapping.classId);
+        
+        // Extraire tous les sujets sélectionnés (sans doublons)
+        const allSubjects = new Set();
+        classSubjectMappings.forEach(mapping => {
+            mapping.subjects.forEach(subjectId => {
+                allSubjects.add(subjectId);
+            });
+        });
+        
+        return teacherID
+            ? { teacherId: teacherID, teachSubjects: Array.from(allSubjects), teachSclasses: selectedClasses, classSubjectMappings }
+            : { name, email, password, role, school, teachSubjects: Array.from(allSubjects), teachSclasses: selectedClasses, classSubjectMappings };
+    };
+    
+    const fields = prepareFields();
 
     const submitHandler = (event) => {
         event.preventDefault();
@@ -142,40 +160,15 @@ const AddTeacher = () => {
                         </>
                     )}
                     <div>
-                        <label className="block text-gray-700 mb-2">Classes</label>
-                        <select
-                            multiple
-                            value={teachSclasses}
-                            onChange={(event) => setTeachSclasses(Array.from(event.target.selectedOptions, option => option.value))}
-                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
-                        >
-                            {sclassesList.map((sclass) => (
-                                <option key={sclass._id} value={sclass._id}>
-                                    {sclass.sclassName}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="text-sm text-gray-500 mt-1 font-poppins">
-                            Hold Ctrl (or Command on Mac) to select multiple classes.
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Associer les classes et les matières</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Sélectionnez d'abord une ou plusieurs classes, puis choisissez les matières pour chaque classe.
                         </p>
-                    </div>
-                    <div>
-                        <label className="block text-gray-700 mb-2">Subjects</label>
-                        <select
-                            multiple
-                            value={teachSubjects}
-                            onChange={(event) => setTeachSubjects(Array.from(event.target.selectedOptions, option => option.value))}
-                            className="w-full px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300 font-poppins h-32"
-                        >
-                            {subjectsList.map((subject) => (
-                                <option key={subject._id} value={subject._id}>
-                                    {subject.subName}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="text-sm text-gray-500 mt-1 font-poppins">
-                            Hold Ctrl (or Command on Mac) to select multiple subjects.
-                        </p>
+                        <ClassSubjectMapping 
+                            sclassesList={sclassesList} 
+                            subjectsList={subjectsList}
+                            onChange={setClassSubjectMappings}
+                        />
                     </div>
                 </div>
                 <div className="flex justify-end mt-6">

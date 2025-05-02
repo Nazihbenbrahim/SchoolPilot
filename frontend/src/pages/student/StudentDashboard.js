@@ -1,118 +1,106 @@
-import { useState } from 'react';
-import {
-    CssBaseline,
-    Box,
-    Toolbar,
-    List,
-    Typography,
-    Divider,
-    IconButton,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import StudentSideBar from './StudentSideBar';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { getUserDetails } from '../../redux/userRelated/userHandle';
+
+// Material UI imports
+import { Box, useTheme } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PersonIcon from '@mui/icons-material/Person';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+
+// Custom components
+import EnsitLayout from '../../components/EnsitLayout';
 import StudentHomePage from './StudentHomePage';
 import StudentProfile from './StudentProfile';
 import StudentSubjects from './StudentSubjects';
 import ViewStdAttendance from './ViewStdAttendance';
 import StudentComplain from './StudentComplain';
-import Logout from '../Logout'
-import AccountMenu from '../../components/AccountMenu';
-import { AppBar, Drawer } from '../../components/styles';
+import Logout from '../Logout';
 
 const StudentDashboard = () => {
-    const [open, setOpen] = useState(true);
-    const toggleDrawer = () => {
-        setOpen(!open);
+    const theme = useTheme();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { currentUser, loading } = useSelector((state) => state.user);
+    const { studentUser } = useSelector((state) => state.student);
+    
+    // S'assurer que les données de l'utilisateur sont chargées
+    useEffect(() => {
+        if (currentUser && currentUser._id) {
+            dispatch(getUserDetails(currentUser._id, "Student"));
+        }
+    }, [dispatch, currentUser]);
+
+    // Determine which menu item is active based on current path
+    const getActivePath = (path) => {
+        return location.pathname.includes(path);
+    };
+
+    // Define sidebar menu items with icons
+    const sidebarItems = [
+        {
+            text: 'Dashboard',
+            icon: <DashboardIcon />,
+            onClick: () => navigate('/Student/dashboard'),
+            active: location.pathname === '/Student/dashboard' || location.pathname === '/Student' || location.pathname === '/'
+        },
+        {
+            text: 'Profile',
+            icon: <PersonIcon />,
+            onClick: () => navigate('/Student/profile'),
+            active: getActivePath('/profile')
+        },
+        {
+            text: 'Subjects',
+            icon: <MenuBookIcon />,
+            onClick: () => navigate('/Student/subjects'),
+            active: getActivePath('/subjects')
+        },
+        {
+            text: 'Attendance',
+            icon: <EventNoteIcon />,
+            onClick: () => navigate('/Student/attendance'),
+            active: getActivePath('/attendance')
+        },
+        {
+            text: 'Complaints',
+            icon: <ReportProblemIcon />,
+            onClick: () => navigate('/Student/complain'),
+            active: getActivePath('/complain')
+        },
+    ];
+
+    // Combine user data for the layout
+    const userData = {
+        ...(currentUser || {}),
+        name: currentUser?.name || '',
+        role: 'Student',
+        // Add any additional student-specific info here
+        class: studentUser?.sclassName || ''
     };
 
     return (
-        <>
-            <Box sx={{ display: 'flex' }}>
-                <CssBaseline />
-                <AppBar open={open} position='absolute'>
-                    <Toolbar sx={{ pr: '24px' }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            aria-label="open drawer"
-                            onClick={toggleDrawer}
-                            sx={{
-                                marginRight: '36px',
-                                ...(open && { display: 'none' }),
-                            }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography
-                            component="h1"
-                            variant="h6"
-                            color="inherit"
-                            noWrap
-                            sx={{ flexGrow: 1 }}
-                        >
-                            Student Dashboard
-                        </Typography>
-                        <AccountMenu />
-                    </Toolbar>
-                </AppBar>
-                <Drawer variant="permanent" open={open} sx={open ? styles.drawerStyled : styles.hideDrawer}>
-                    <Toolbar sx={styles.toolBarStyled}>
-                        <IconButton onClick={toggleDrawer}>
-                            <ChevronLeftIcon />
-                        </IconButton>
-                    </Toolbar>
-                    <Divider />
-                    <List component="nav">
-                        <StudentSideBar />
-                    </List>
-                </Drawer>
-                <Box component="main" sx={styles.boxStyled}>
-                    <Toolbar />
-                    <Routes>
-                        <Route path="/" element={<StudentHomePage />} />
-                        <Route path='*' element={<Navigate to="/" />} />
-                        <Route path="/Student/dashboard" element={<StudentHomePage />} />
-                        <Route path="/Student/profile" element={<StudentProfile />} />
-
-                        <Route path="/Student/subjects" element={<StudentSubjects />} />
-                        <Route path="/Student/attendance" element={<ViewStdAttendance />} />
-                        <Route path="/Student/complain" element={<StudentComplain />} />
-
-                        <Route path="/logout" element={<Logout />} />
-                    </Routes>
-                </Box>
-            </Box>
-        </>
+        <EnsitLayout 
+            sideList={sidebarItems} 
+            title="Student Dashboard" 
+            user={userData}
+        >
+            <Routes>
+                <Route path="/" element={<StudentHomePage />} />
+                <Route path='*' element={<Navigate to="/" />} />
+                <Route path="/Student/dashboard" element={<StudentHomePage />} />
+                <Route path="/Student/profile" element={<StudentProfile />} />
+                <Route path="/Student/subjects" element={<StudentSubjects />} />
+                <Route path="/Student/attendance" element={<ViewStdAttendance />} />
+                <Route path="/Student/complain" element={<StudentComplain />} />
+                <Route path="/logout" element={<Logout />} />
+            </Routes>
+        </EnsitLayout>
     );
 }
 
-export default StudentDashboard
-
-const styles = {
-    boxStyled: {
-        backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
-        flexGrow: 1,
-        height: '100vh',
-        overflow: 'auto',
-    },
-    toolBarStyled: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        px: [1],
-    },
-    drawerStyled: {
-        display: "flex"
-    },
-    hideDrawer: {
-        display: 'flex',
-        '@media (max-width: 600px)': {
-            display: 'none',
-        },
-    },
-}
+export default StudentDashboard;

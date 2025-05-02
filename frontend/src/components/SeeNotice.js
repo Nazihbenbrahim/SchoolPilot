@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllNotices } from '../redux/noticeRelated/noticeHandle';
-import { Paper } from '@mui/material';
+import { getAllNotices, getNoticesByClass } from '../redux/noticeRelated/noticeHandle';
+import { Paper, Typography, Chip } from '@mui/material';
 import TableViewTemplate from './TableViewTemplate';
 
 const SeeNotice = () => {
@@ -10,14 +10,27 @@ const SeeNotice = () => {
     const { currentUser, currentRole } = useSelector(state => state.user);
     const { noticesList, loading, error, response } = useSelector((state) => state.notice);
 
+    // Pour les enseignants, récupérer les notices spécifiques à la classe sélectionnée
+    const { selectedClass } = useSelector(state => state.teacher);
+
     useEffect(() => {
         if (currentRole === "Admin") {
+            // Pour l'admin, récupérer toutes les notices
             dispatch(getAllNotices(currentUser._id, "Notice"));
         }
+        else if (currentRole === "Teacher" && selectedClass) {
+            // Pour les enseignants, récupérer les notices spécifiques à la classe sélectionnée
+            dispatch(getNoticesByClass(currentUser.school._id, selectedClass._id));
+        }
+        else if (currentRole === "Student") {
+            // Pour les étudiants, récupérer les notices spécifiques à leur classe
+            dispatch(getNoticesByClass(currentUser.school._id, currentUser.sclass._id));
+        }
         else {
+            // Fallback pour les autres cas
             dispatch(getAllNotices(currentUser.school._id, "Notice"));
         }
-    }, [dispatch]);
+    }, [dispatch, currentRole, currentUser, selectedClass]);
 
     if (error) {
         console.log(error);
@@ -27,6 +40,7 @@ const SeeNotice = () => {
         { id: 'title', label: 'Title', minWidth: 170 },
         { id: 'details', label: 'Details', minWidth: 100 },
         { id: 'date', label: 'Date', minWidth: 170 },
+        { id: 'targetClass', label: 'Classe', minWidth: 100 },
     ];
 
     const noticeRows = noticesList.map((notice) => {
@@ -36,6 +50,7 @@ const SeeNotice = () => {
             title: notice.title,
             details: notice.details,
             date: dateString,
+            targetClass: notice.isGeneral ? 'Toutes les classes' : (notice.targetClass?.sclassName || 'Non spécifiée'),
             id: notice._id,
         };
     });
@@ -47,7 +62,16 @@ const SeeNotice = () => {
                 <div style={{ fontSize: '20px' }}>No Notices to Show Right Now</div>
             ) : (
                 <>
-                    <h3 style={{ fontSize: '30px', marginBottom: '40px' }}>Notices</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+                        <h3 style={{ fontSize: '30px' }}>Notices</h3>
+                        {currentRole === "Teacher" && selectedClass && (
+                            <Chip 
+                                label={`Classe: ${selectedClass.sclassName}`} 
+                                color="primary" 
+                                variant="outlined" 
+                            />
+                        )}
+                    </div>
                     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
                         {Array.isArray(noticesList) && noticesList.length > 0 &&
                             <TableViewTemplate columns={noticeColumns} rows={noticeRows} />

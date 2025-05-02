@@ -50,10 +50,39 @@ const StudentAttendance = ({ situation }) => {
         setChosenSubName(selectedSubject._id);
     };
 
-    const fields = { subName: chosenSubName, status, date };
+    const validateForm = () => {
+        if (!chosenSubName) {
+            setMessage("Veuillez sélectionner une matière");
+            setShowPopup(true);
+            return false;
+        }
+        if (!status) {
+            setMessage("Veuillez sélectionner un statut");
+            setShowPopup(true);
+            return false;
+        }
+        if (!date) {
+            setMessage("Veuillez sélectionner une date");
+            setShowPopup(true);
+            return false;
+        }
+        return true;
+    };
 
     const submitHandler = (event) => {
         event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
+
+        // S'assurer que les données sont au bon format
+        const fields = { 
+            subName: chosenSubName, 
+            status, 
+            date: new Date(date).toISOString() 
+        };
+
+        console.log("Sending attendance data:", fields);
         setLoader(true);
         dispatch(updateStudentFields(studentID, fields, "StudentAttendance"));
     };

@@ -18,8 +18,12 @@ const StudentSubjects = () => {
     const { userDetails, currentUser, loading, response, error } = useSelector((state) => state.user);
 
     useEffect(() => {
-        dispatch(getUserDetails(currentUser._id, "Student"));
-    }, [dispatch, currentUser._id])
+        // Vérifier si currentUser existe avant d'accéder à _id
+        if (currentUser && currentUser._id) {
+            console.log("Récupération des détails de l'étudiant:", currentUser._id);
+            dispatch(getUserDetails(currentUser._id, "Student"));
+        }
+    }, [dispatch, currentUser])
 
     if (response) { console.log(response) }
     else if (error) { console.log(error) }
@@ -29,15 +33,24 @@ const StudentSubjects = () => {
 
     useEffect(() => {
         if (userDetails) {
-            setSubjectMarks(userDetails.examResult || []);
+            console.log("Détails de l'étudiant reçus:", userDetails);
+            
+            if (userDetails.examResult && userDetails.examResult.length > 0) {
+                console.log("Résultats d'examen trouvés:", userDetails.examResult);
+                setSubjectMarks(userDetails.examResult);
+            } else {
+                console.log("Aucun résultat d'examen trouvé");
+                setSubjectMarks([]);
+            }
         }
     }, [userDetails])
 
     useEffect(() => {
-        if (subjectMarks === []) {
+        // Vérifier si currentUser et sclassName existent avant d'accéder à _id
+        if (subjectMarks.length === 0 && currentUser && currentUser.sclassName && currentUser.sclassName._id) {
             dispatch(getSubjectList(currentUser.sclassName._id, "ClassSubjects"));
         }
-    }, [subjectMarks, dispatch, currentUser.sclassName._id]);
+    }, [subjectMarks, dispatch, currentUser]);
 
     const handleSectionChange = (event, newSection) => {
         setSelectedSection(newSection);

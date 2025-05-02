@@ -49,10 +49,39 @@ const StudentExamMarks = ({ situation }) => {
         setChosenSubName(selectedSubject._id);
     };
 
-    const fields = { subName: chosenSubName, marksObtained };
+    const validateForm = () => {
+        if (!chosenSubName) {
+            setMessage("Veuillez sélectionner une matière");
+            setShowPopup(true);
+            return false;
+        }
+        if (!marksObtained && marksObtained !== 0) {
+            setMessage("Veuillez entrer une note valide");
+            setShowPopup(true);
+            return false;
+        }
+        // Vérifier que la note est un nombre
+        if (isNaN(Number(marksObtained))) {
+            setMessage("La note doit être un nombre");
+            setShowPopup(true);
+            return false;
+        }
+        return true;
+    };
 
     const submitHandler = (event) => {
         event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
+
+        // S'assurer que les données sont au bon format
+        const fields = { 
+            subName: chosenSubName, 
+            marksObtained: Number(marksObtained) 
+        };
+
+        console.log("Sending exam marks data:", fields);
         setLoader(true);
         dispatch(updateStudentFields(studentID, fields, "UpdateExamResult"));
     };

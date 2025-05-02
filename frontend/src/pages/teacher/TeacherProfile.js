@@ -9,19 +9,20 @@ const TeacherProfile = () => {
   if (response) { console.log(response) }
   else if (error) { console.log(error) }
 
-  const teachSclass = currentUser.teachSclass
-  const teachSubject = currentUser.teachSubject
-  const teachSchool = currentUser.school
+  // Ajouter des vérifications pour éviter les erreurs si currentUser n'est pas encore chargé
+  const teachSclass = currentUser?.teachSclass || {}
+  const teachSubject = currentUser?.teachSubject || {}
+  const teachSchool = currentUser?.school || {}
 
   return (
     <>
       <ProfileCard>
         <ProfileCardContent>
-          <ProfileText>Name: {currentUser.name}</ProfileText>
-          <ProfileText>Email: {currentUser.email}</ProfileText>
-          <ProfileText>Class: {teachSclass.sclassName}</ProfileText>
-          <ProfileText>Subject: {teachSubject.subName}</ProfileText>
-          <ProfileText>School: {teachSchool.schoolName}</ProfileText>
+          <ProfileText>Name: {currentUser?.name || 'Non disponible'}</ProfileText>
+          <ProfileText>Email: {currentUser?.email || 'Non disponible'}</ProfileText>
+          <ProfileText>Class: {teachSclass?.sclassName || 'Non disponible'}</ProfileText>
+          <ProfileText>Subject: {teachSubject?.subName || 'Non disponible'}</ProfileText>
+          <ProfileText>School: {teachSchool?.schoolName || 'Non disponible'}</ProfileText>
         </ProfileCardContent>
       </ProfileCard>
     </>

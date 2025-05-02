@@ -13,8 +13,9 @@ const StudentComplain = () => {
 
     const { status, currentUser, error } = useSelector(state => state.user);
 
-    const user = currentUser._id
-    const school = currentUser.school._id
+    // Utiliser l'opérateur de chaînage optionnel pour éviter les erreurs lorsque les objets sont undefined
+    const user = currentUser?._id
+    const school = currentUser?.school?._id
     const address = "Complain"
 
     const [loader, setLoader] = useState(false)

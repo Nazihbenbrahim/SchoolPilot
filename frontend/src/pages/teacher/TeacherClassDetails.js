@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom'
 import { getClassStudents } from "../../redux/sclassRelated/sclassHandle";
+import ClassSelector from "./ClassSelector";
 import { Paper, Box, Typography, ButtonGroup, Button, Popper, Grow, ClickAwayListener, MenuList, MenuItem } from '@mui/material';
 import { BlackButton, BlueButton} from "../../components/buttonStyles";
 import TableTemplate from "../../components/TableTemplate";
@@ -14,11 +15,14 @@ const TeacherClassDetails = () => {
     const { sclassStudents, loading, error, getresponse } = useSelector((state) => state.sclass);
 
     const { currentUser } = useSelector((state) => state.user);
-    const classID = currentUser.teachSclass?._id
+    const { selectedClass } = useSelector((state) => state.teacher);
+    const classID = selectedClass?._id;
     const subjectID = currentUser.teachSubject?._id
 
     useEffect(() => {
-        dispatch(getClassStudents(classID));
+        if (classID) {
+            dispatch(getClassStudents(classID));
+        }
     }, [dispatch, classID])
 
     if (error) {
@@ -145,7 +149,12 @@ const TeacherClassDetails = () => {
 
     return (
         <>
-            {loading ? (
+            <ClassSelector />
+            {!classID ? (
+                <div className="p-4 bg-gray-100 rounded-md">
+                    <p className="text-center text-gray-600">Please select a class to view students</p>
+                </div>
+            ) : loading ? (
                 <div>Loading...</div>
             ) : (
                 <>

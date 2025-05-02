@@ -10,8 +10,9 @@ const subjectSchema = new mongoose.Schema({
         required: true,
     },
     sessions: {
-        type: String,
+        type: Number,
         required: true,
+        default: 0
     },
     sclassName: {
         type: mongoose.Schema.Types.ObjectId,

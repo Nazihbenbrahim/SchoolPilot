@@ -4,12 +4,17 @@ import './index.css';
 import App from './App';
 import store from './redux/store';
 import { Provider } from 'react-redux';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import ensitTheme from './theme/ensitTheme';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <ThemeProvider theme={ensitTheme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
     </Provider>
   </React.StrictMode>
 )

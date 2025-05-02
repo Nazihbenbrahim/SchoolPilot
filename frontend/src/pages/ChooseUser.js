@@ -7,21 +7,30 @@ import {
   Container,
   CircularProgress,
   Backdrop,
+  Typography,
+  Card,
+  CardContent,
+  CardActionArea,
+  useTheme,
+  alpha,
 } from '@mui/material';
-import { AccountCircle, School, Group } from '@mui/icons-material';
-import styled from 'styled-components';
+import { styled } from '@mui/material/styles';
+import { AdminPanelSettings, School, Person } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
 import Popup from '../components/Popup';
+import EnsitLogoHorizontal from '../assets/logos/EnsitLogoHorizontal';
+import EnsitLogoUnesco from '../assets/logos/EnsitLogoUnesco';
 
 const ChooseUser = ({ visitor }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const password = "zxc"
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const password = "zxc";
 
-  const { status, currentUser, currentRole } = useSelector(state => state.user);;
+  const { status, currentUser, currentRole } = useSelector(state => state.user);
 
-  const [loader, setLoader] = useState(false)
+  const [loader, setLoader] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -83,85 +92,168 @@ const ChooseUser = ({ visitor }) => {
   }, [status, currentRole, navigate, currentUser]);
 
   return (
-    <StyledContainer>
-      <Container>
-        <Grid container spacing={2} justifyContent="center">
+    <RootContainer>
+      <LogoContainer>
+        <EnsitLogoHorizontal height={80} />
+      </LogoContainer>
+      
+      <Typography variant="h4" component="h1" align="center" sx={{
+        fontWeight: 'bold',
+        color: 'white',
+        mb: 1,
+        textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+      }}>
+        SchoolPilot
+      </Typography>
+      
+      <Typography variant="h6" align="center" sx={{
+        color: 'rgba(255, 255, 255, 0.8)',
+        mb: 6,
+        maxWidth: '600px',
+        mx: 'auto',
+        px: 2,
+        textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+      }}>
+        Comprehensive School Management System
+      </Typography>
+      
+      <Container maxWidth="lg">
+        <Grid container spacing={4} justifyContent="center">
           <Grid item xs={12} sm={6} md={4}>
-            <div onClick={() => navigateHandler("Admin")}>
-              <StyledPaper elevation={3}>
-                <Box mb={2}>
-                  <AccountCircle fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Admin
-                </StyledTypography>
-                Login as an administrator to access the dashboard to manage app data.
-              </StyledPaper>
-            </div>
+            <RoleCard onClick={() => navigateHandler("Admin")}>
+              <CardActionArea sx={{ height: '100%', p: 2 }}>
+                <CardContent sx={{ textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <IconWrapper color={theme.palette.error.main}>
+                    <AdminPanelSettings fontSize="large" />
+                  </IconWrapper>
+                  <Typography variant="h5" component="h2" gutterBottom fontWeight="bold" sx={{ mt: 2 }}>
+                    Admin
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Login as an administrator to access the dashboard to manage app data.
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </RoleCard>
           </Grid>
+          
           <Grid item xs={12} sm={6} md={4}>
-            <StyledPaper elevation={3}>
-              <div onClick={() => navigateHandler("Student")}>
-                <Box mb={2}>
-                  <School fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Student
-                </StyledTypography>
-                Login as a student to explore course materials and assignments.
-              </div>
-            </StyledPaper>
+            <RoleCard onClick={() => navigateHandler("Student")}>
+              <CardActionArea sx={{ height: '100%', p: 2 }}>
+                <CardContent sx={{ textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <IconWrapper color={theme.palette.primary.main}>
+                    <School fontSize="large" />
+                  </IconWrapper>
+                  <Typography variant="h5" component="h2" gutterBottom fontWeight="bold" sx={{ mt: 2 }}>
+                    Student
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Login as a student to explore course materials and assignments.
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </RoleCard>
           </Grid>
+          
           <Grid item xs={12} sm={6} md={4}>
-            <StyledPaper elevation={3}>
-              <div onClick={() => navigateHandler("Teacher")}>
-                <Box mb={2}>
-                  <Group fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Teacher
-                </StyledTypography>
-                Login as a teacher to create courses, assignments, and track student progress.
-              </div>
-            </StyledPaper>
+            <RoleCard onClick={() => navigateHandler("Teacher")}>
+              <CardActionArea sx={{ height: '100%', p: 2 }}>
+                <CardContent sx={{ textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <IconWrapper color={theme.palette.success.main}>
+                    <Person fontSize="large" />
+                  </IconWrapper>
+                  <Typography variant="h5" component="h2" gutterBottom fontWeight="bold" sx={{ mt: 2 }}>
+                    Teacher
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Login as a teacher to create courses, assignments, and track student progress.
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </RoleCard>
           </Grid>
         </Grid>
       </Container>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, mb: 2 }}>
+        <EnsitLogoUnesco height={50} opacity={0.7} />
+      </Box>
       <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ 
+          color: '#fff', 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          backdropFilter: 'blur(4px)'
+        }}
         open={loader}
       >
-        <CircularProgress color="inherit" />
-        Please Wait
+        <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+          <CircularProgress color="primary" size={50} thickness={4} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Please Wait
+          </Typography>
+        </Box>
       </Backdrop>
       <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-    </StyledContainer>
+    </RootContainer>
   );
 };
 
 export default ChooseUser;
 
-const StyledContainer = styled.div`
-  background: linear-gradient(to bottom, #411d70, #19118b);
-  height: 120vh;
-  display: flex;
-  justify-content: center;
-  padding: 2rem;
-`;
-
-const StyledPaper = styled(Paper)`
-  padding: 20px;
-  text-align: center;
-  background-color: #1f1f38;
-  color:rgba(255, 255, 255, 0.6);
-  cursor:pointer;
-
-  &:hover {
-    background-color: #2c2c6c;
-    color:white;
+// Styled components using MUI styled API
+const RootContainer = styled(Box)(({ theme }) => ({
+  minHeight: '100vh',
+  background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(4, 2),
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundImage: 'radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%)',
+    pointerEvents: 'none',
   }
-`;
+}));
 
-const StyledTypography = styled.h2`
-  margin-bottom: 10px;
-`;
+const LogoContainer = styled(Box)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  display: 'flex',
+  justifyContent: 'center',
+}));
+
+const RoleCard = styled(Card)(({ theme }) => ({
+  height: '100%',
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  background: theme.palette.background.paper,
+  transition: 'all 0.3s ease',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-8px)',
+    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+  },
+}));
+
+const IconWrapper = styled(Box)(({ theme, color }) => ({
+  width: 80,
+  height: 80,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: alpha(color, 0.1),
+  color: color,
+  marginBottom: theme.spacing(1),
+  transition: 'all 0.3s ease',
+  '& .MuiSvgIcon-root': {
+    fontSize: 40,
+  },
+}));

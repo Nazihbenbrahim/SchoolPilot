@@ -6,6 +6,7 @@ const initialState = {
     loading: false,
     error: null,
     response: null,
+    selectedClass: null,
 };
 
 const teacherSlice = createSlice({
@@ -40,6 +41,9 @@ const teacherSlice = createSlice({
             state.loading = false;
             state.error = null;
             state.response = null;
+        },
+        setSelectedClass: (state, action) => {
+            state.selectedClass = action.payload;
         }
     },
 });
@@ -50,7 +54,8 @@ export const {
     getFailed,
     getError,
     doneSuccess,
-    postDone
+    postDone,
+    setSelectedClass
 } = teacherSlice.actions;
 
 export const teacherReducer = teacherSlice.reducer;

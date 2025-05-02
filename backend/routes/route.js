@@ -3,7 +3,7 @@ const router = require('express').Router();
 const { adminRegister, adminLogIn, getAdminDetail } = require('../controllers/admin-controller.js');
 const { sclassCreate, sclassList, deleteSclass, deleteSclasses, getSclassDetail, getSclassStudents } = require('../controllers/class-controller.js');
 const { complainCreate, complainList } = require('../controllers/complain-controller.js');
-const { noticeCreate, noticeList, deleteNotices, deleteNotice, updateNotice } = require('../controllers/notice-controller.js');
+const { noticeCreate, noticeList, noticeListByClass, deleteNotices, deleteNotice, updateNotice } = require('../controllers/notice-controller.js');
 const {
     studentRegister,
     studentLogIn,
@@ -22,6 +22,7 @@ const {
 } = require('../controllers/student_controller.js');
 const { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } = require('../controllers/subject-controller.js');
 const { teacherRegister, teacherLogIn, getTeachers, getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubjectsAndClasses, teacherAttendance } = require('../controllers/teacher-controller.js');
+const { getAllSchedules, getClassSchedules, getTeacherSchedules, getScheduleById, createSchedule, updateSchedule, deleteSchedule } = require('../controllers/schedule-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -52,12 +53,13 @@ router.get("/Teacher/:id", getTeacherDetail);
 router.delete("/Teachers/:id", deleteTeachers);
 router.delete("/TeachersClass/:id", deleteTeachersByClass);
 router.delete("/Teacher/:id", deleteTeacher);
-router.put("/TeacherSubjectsAndClasses", updateTeacherSubjectsAndClasses); // New endpoint
+router.put("/TeacherSubjectsAndClasses", updateTeacherSubjectsAndClasses); 
 router.post('/TeacherAttendance/:id', teacherAttendance);
 
 // Notice
 router.post('/NoticeCreate', noticeCreate);
 router.get('/NoticeList/:id', noticeList);
+router.get('/NoticeListByClass/:schoolId/:classId', noticeListByClass);
 router.delete("/Notices/:id", deleteNotices);
 router.delete("/Notice/:id", deleteNotice);
 router.put("/Notice/:id", updateNotice);
@@ -65,6 +67,15 @@ router.put("/Notice/:id", updateNotice);
 // Complain
 router.post('/ComplainCreate', complainCreate);
 router.get('/ComplainList/:id', complainList);
+
+// Schedule (Emploi du temps)
+router.get('/schedules/class/:id', getClassSchedules);
+router.get('/schedules/teacher/:id', getTeacherSchedules);
+router.get('/schedules/detail/:id', getScheduleById);
+router.get('/schedules/:id', getAllSchedules);
+router.post('/schedules', createSchedule);
+router.put('/schedules/:id', updateSchedule);
+router.delete('/schedules/:id', deleteSchedule);
 
 // Sclass
 router.post('/SclassCreate', sclassCreate);

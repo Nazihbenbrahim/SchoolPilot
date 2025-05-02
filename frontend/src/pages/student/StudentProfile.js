@@ -9,8 +9,9 @@ const StudentProfile = () => {
   if (response) { console.log(response) }
   else if (error) { console.log(error) }
 
-  const sclassName = currentUser.sclassName
-  const studentSchool = currentUser.school
+  // Utiliser l'opérateur de chaînage optionnel pour éviter les erreurs lorsque les objets sont undefined
+  const sclassName = currentUser?.sclassName || {}
+  const studentSchool = currentUser?.school || {}
 
   return (
     <>
@@ -20,28 +21,28 @@ const StudentProfile = () => {
             <Grid item xs={12}>
               <Box display="flex" justifyContent="center">
                 <Avatar alt="Student Avatar" sx={{ width: 150, height: 150 }}>
-                  {String(currentUser.name).charAt(0)}
+                  {currentUser?.name ? String(currentUser.name).charAt(0) : ""}
                 </Avatar>
               </Box>
             </Grid>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="center">
                 <Typography variant="h5" component="h2" textAlign="center">
-                  {currentUser.name}
+                  {currentUser?.name || ""}
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="center">
                 <Typography variant="subtitle1" component="p" textAlign="center">
-                  Student Roll No: {currentUser.rollNum}
+                  Student Roll No: {currentUser?.rollNum || ""}
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="center">
                 <Typography variant="subtitle1" component="p" textAlign="center">
-                  Class: {sclassName.sclassName}
+                  Class: {sclassName?.sclassName || "Non assignée"}
                 </Typography>
               </Box>
             </Grid>

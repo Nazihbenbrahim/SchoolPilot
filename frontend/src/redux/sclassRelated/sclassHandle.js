@@ -59,7 +59,15 @@ export const getSubjectList = (id, address) => async (dispatch) => {
     dispatch(getRequest());
 
     try {
-        const result = await axios.get(`${process.env.REACT_APP_BASE_URL}/${address}/${id}`);
+        // Utiliser la route appropriée en fonction de l'adresse fournie
+        let url;
+        if (address === "ClassSubjects") {
+            url = `${process.env.REACT_APP_BASE_URL}/ClassSubjects/${id}`;
+        } else {
+            url = `${process.env.REACT_APP_BASE_URL}/AllSubjects/${id}`;
+        }
+        
+        const result = await axios.get(url);
         if (result.data.message) {
             dispatch(getFailed(result.data.message));
         } else {
